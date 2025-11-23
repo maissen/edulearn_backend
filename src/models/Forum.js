@@ -3,7 +3,7 @@ import { db } from "../../config/db.js";
 export default class Forum {
   static async findAll() {
     const [rows] = await db.query(
-      `SELECT f.*, u.fullname 
+      `SELECT f.id, f.titre, f.contenu, f.user_id, u.username 
        FROM forum f 
        JOIN users u ON u.id = f.user_id
        ORDER BY f.id DESC`

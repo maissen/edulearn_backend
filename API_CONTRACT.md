@@ -33,7 +33,7 @@ Authorization: Bearer <token>
 - **Body**:
 ```json
 {
-  "fullname": "string",
+  "username": "string",
   "email": "string",
   "password": "string",
   "role": "string (admin|enseignant|etudiant)"
@@ -57,9 +57,10 @@ Authorization: Bearer <token>
 ```json
 {
   "token": "string",
+  "expiration_date": "number",
   "user": {
     "id": "number",
-    "fullname": "string",
+    "username": "string",
     "email": "string",
     "role": "string"
   }
@@ -78,7 +79,7 @@ Authorization: Bearer <token>
 ```json
 {
   "id": "number",
-  "fullname": "string",
+  "username": "string",
   "email": "string",
   "role": "string"
 }
@@ -182,7 +183,7 @@ Authorization: Bearer <token>
     "titre": "string",
     "contenu": "string",
     "user_id": "number",
-    "fullname": "string"
+    "username": "string"
   }
 ]
 ```
@@ -266,7 +267,7 @@ Authorization: Bearer <token>
 [
   {
     "id": "number",
-    "fullname": "string",
+    "username": "string",
     "email": "string",
     "module": "string"
   }
@@ -279,7 +280,7 @@ Authorization: Bearer <token>
 - **Body**:
 ```json
 {
-  "fullname": "string",
+  "username": "string",
   "email": "string",
   "module": "string"
 }
@@ -298,7 +299,7 @@ Authorization: Bearer <token>
 - **Body**:
 ```json
 {
-  "fullname": "string",
+  "username": "string",
   "email": "string",
   "module": "string"
 }
@@ -335,7 +336,7 @@ Authorization: Bearer <token>
 [
   {
     "id": "number",
-    "fullname": "string",
+    "username": "string",
     "email": "string",
     "classe_id": "number"
   }
@@ -348,7 +349,7 @@ Authorization: Bearer <token>
 - **Body**:
 ```json
 {
-  "fullname": "string",
+  "username": "string",
   "email": "string",
   "classe_id": "number"
 }
@@ -367,7 +368,7 @@ Authorization: Bearer <token>
 - **Body**:
 ```json
 {
-  "fullname": "string",
+  "username": "string",
   "email": "string",
   "classe_id": "number"
 }

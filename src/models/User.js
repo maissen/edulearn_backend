@@ -12,11 +12,11 @@ export default class User {
   }
 
   static async create(user) {
-    const { fullname, email, password, role } = user;
+    const { username, email, password, role } = user;
 
     await db.query(
-      "INSERT INTO users(fullname, email, password, role) VALUES (?, ?, ?, ?)",
-      [fullname, email, password, role]
+      "INSERT INTO users(username, email, password, role) VALUES (?, ?, ?, ?)",
+      [username, email, password, role]
     );
 
     return true;

@@ -7,18 +7,18 @@ export default class Enseignant {
   }
 
   static async create(data) {
-    const { fullname, email, module } = data;
+    const { username, email, module } = data;
     await db.query(
-      "INSERT INTO enseignants(fullname, email, module) VALUES (?, ?, ?)",
-      [fullname, email, module]
+      "INSERT INTO enseignants(username, email, module) VALUES (?, ?, ?)",
+      [username, email, module]
     );
   }
 
   static async update(id, data) {
-    const { fullname, email, module } = data;
+    const { username, email, module } = data;
     await db.query(
-      "UPDATE enseignants SET fullname = ?, email = ?, module = ? WHERE id = ?",
-      [fullname, email, module, id]
+      "UPDATE enseignants SET username = ?, email = ?, module = ? WHERE id = ?",
+      [username, email, module, id]
     );
   }
 

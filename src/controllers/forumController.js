@@ -2,7 +2,7 @@ import { db } from "../../config/db.js";
 
 export const getAllPosts = async (req, res) => {
   const [rows] = await db.query(
-    "SELECT f.*, u.fullname FROM forum f JOIN users u ON f.user_id = u.id ORDER BY f.id DESC"
+    "SELECT f.id, f.titre, f.contenu, f.user_id, u.username FROM forum f JOIN users u ON f.user_id = u.id ORDER BY f.id DESC"
   );
   res.json(rows);
 };
