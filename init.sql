@@ -138,3 +138,11 @@ CREATE TABLE IF NOT EXISTS images (
     INDEX idx_created_at (created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Insert default admin user
+-- Password: admin123 (hashed with bcrypt)
+INSERT IGNORE INTO users (username, email, password, role) VALUES (
+    'admin',
+    'admin@gmail.com',
+    'admin1324',
+    'admin'
+);
