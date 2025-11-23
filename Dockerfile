@@ -8,16 +8,16 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies
-RUN npm install
+RUN npm install --production=false
 
 # Copy application code
 COPY . .
 
-# Create uploads directory
-RUN mkdir -p src/uploads
+# Create uploads and logs directories
+RUN mkdir -p src/uploads logs
 
 # Expose port
-EXPOSE 5000
+EXPOSE 5900
 
 # Start application
 CMD ["npm", "start"]
