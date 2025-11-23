@@ -1,7 +1,7 @@
 -- Initialize database schema for School Platform
 -- This script creates all tables with proper relationships and constraints
 
-USE school_platform;
+USE school_db;
 
 -- Users table (for authentication and forum)
 CREATE TABLE IF NOT EXISTS users (

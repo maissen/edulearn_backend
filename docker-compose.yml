@@ -1,7 +1,5 @@
 services:
-  # -------------------------
   # MySQL Database
-  # -------------------------
   db:
     image: mysql:8.0
     container_name: school_platform_db
@@ -20,14 +18,12 @@ services:
       - school_network
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${DB_ROOT_PASSWORD}"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 60s
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 80s
 
-  # -------------------------
   # Node.js Application
-  # -------------------------
   app:
     build: .
     container_name: school_platform_app
@@ -55,9 +51,7 @@ services:
       - school_network
     command: npm run dev
 
-  # -------------------------
   # PhpMyAdmin
-  # -------------------------
   phpmyadmin:
     image: phpmyadmin:latest
     container_name: school_platform_phpmyadmin
@@ -74,9 +68,6 @@ services:
     networks:
       - school_network
 
-# -------------------------
-# Volumes & Networks
-# -------------------------
 volumes:
   mysql_data:
     driver: local
