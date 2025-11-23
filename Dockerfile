@@ -17,7 +17,7 @@ COPY . .
 RUN mkdir -p src/uploads logs
 
 # Expose port
-EXPOSE 5900
+EXPOSE 5000
 
 # Start application
 CMD ["npm", "start"]
