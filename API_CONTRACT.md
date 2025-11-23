@@ -1,6 +1,6 @@
 # API Contract - School Platform
 
-Base URL: `http://localhost:5000`
+Base URL: `http://79.137.34.134:5000`
 
 ## Authentication
 Most endpoints require a JWT token in the Authorization header:
