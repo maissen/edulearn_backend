@@ -9,6 +9,6 @@ export const uploadImage = async (req, res) => {
 };
 
 export const getImages = async (req, res) => {
-  const [rows] = await db.query("SELECT * FROM images ORDER BY id DESC");
+  const [rows] = await db.query("SELECT id, url FROM images ORDER BY id DESC");
   res.json(rows);
 };

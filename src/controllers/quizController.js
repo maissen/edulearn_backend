@@ -1,7 +1,7 @@
 import { db } from "../../config/db.js";
 
 export const getAllQuiz = async (req, res) => {
-  const [rows] = await db.query("SELECT * FROM quiz");
+  const [rows] = await db.query("SELECT id, titre, cours_id FROM quiz");
   res.json(rows);
 };
 

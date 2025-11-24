@@ -1,7 +1,7 @@
 import { db } from "../../config/db.js";
 
 export const getAllClasses = async (req, res) => {
-  const [rows] = await db.query("SELECT * FROM classes");
+  const [rows] = await db.query("SELECT id, nom, niveau FROM classes");
   res.json(rows);
 };
 

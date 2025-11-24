@@ -1,12 +1,12 @@
 import { db } from "../../config/db.js";
 
 export const getAllCours = async (req, res) => {
-  const [rows] = await db.query("SELECT * FROM cours");
+  const [rows] = await db.query("SELECT id, titre, description, enseignant_id FROM cours");
   res.json(rows);
 };
 
 export const getCoursById = async (req, res) => {
-  const [rows] = await db.query("SELECT * FROM cours WHERE id = ?", [req.params.id]);
+  const [rows] = await db.query("SELECT id, titre, description, enseignant_id FROM cours WHERE id = ?", [req.params.id]);
   res.json(rows[0]);
 };
 

@@ -13,7 +13,7 @@ export const addQuestion = async (req, res) => {
 };
 
 export const getQuestionsByQuiz = async (req, res) => {
-  const [rows] = await db.query("SELECT * FROM questions WHERE quiz_id = ?", [
+  const [rows] = await db.query("SELECT id, quiz_id, question, option_a, option_b, option_c, option_d, correct FROM questions WHERE quiz_id = ?", [
     req.params.quizId
   ]);
 
