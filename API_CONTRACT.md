@@ -161,17 +161,19 @@ Authorization: Bearer <token>
   "id": "number",
   "username": "string",
   "email": "string",
-  "role": "string"
+  "role": "string",
+  "biography": "string"
 }
 ```
 
 ### PUT /profile
-- **Description:** Update current user profile (username only)
+- **Description:** Update current user profile (username and biography)
 - **Auth:** Required (any role)
 - **Body:**
 ```json
 {
-  "username": "string"
+  "username": "string",
+  "biography": "string"
 }
 ```
 - **Success:** 200 OK
@@ -181,7 +183,8 @@ Authorization: Bearer <token>
   "message": "Profile updated successfully"
 }
 ```
-- **Error:** 400 Bad Request if username is empty or already taken
+- **Error:** 400 Bad Request if both fields are empty or username is already taken
+- **Note:** Biography can be set to empty string to clear it, or omitted to leave unchanged
 
 ---
 
@@ -932,20 +935,3 @@ Authorization: Bearer <token>
 - **Enseignant (Teacher):** Can create/update/delete cours, examen, quiz, and questions
 - **Etudiant (Student):** Can view content and participate in forums
 
----
-
-## Summary of Changes
-
-### New Routes Added:
-1. `GET /enseignant/stats/:teacherId` - Teacher statistics
-2. `GET /enseignant/:teacherId/courses` - Teacher's detailed courses
-3. `GET /cours/:id/content` - Full course content
-4. `GET /cours/:id/related` - Related courses
-5. `GET /cours/:id/enrollments` - Course enrollment data
-6. `GET /etudiant/:studentId/stats` - Student statistics
-7. `GET /etudiant/:studentId/courses` - Student's enrolled courses
-8. `GET /admin/stats` - Platform statistics
-
-### Enhanced Existing Routes:
-1. `GET /profile` - Added bio, specialization, avatarUrl
-2. `GET /cours/:id` - Added imageUrl, duration, videoUrl, timestamps

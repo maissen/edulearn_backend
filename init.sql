@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS users (
     email VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
     role ENUM('admin', 'enseignant', 'etudiant') NOT NULL DEFAULT 'etudiant',
+    biography TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_email (email),
@@ -143,14 +144,14 @@ CREATE TABLE IF NOT EXISTS images (
 -- create entries in both users and respective role tables (enseignants/etudiants)
 -- Sample enseignants and etudiants data is provided for testing existing functionality
 
--- -- Insert sample classes
--- INSERT IGNORE INTO classes (nom, niveau) VALUES
--- ('Classe A', 'Primaire'),
--- ('Classe B', 'Primaire'),
--- ('Classe C', 'Collège'),
--- ('Classe D', 'Collège'),
--- ('Classe E', 'Lycée'),
--- ('Classe F', 'Lycée');
+-- Insert sample classes
+INSERT IGNORE INTO classes (nom, niveau) VALUES
+('Classe A', 'Primaire'),
+('Classe B', 'Primaire'),
+('Classe C', 'Collège'),
+('Classe D', 'Collège'),
+('Classe E', 'Lycée'),
+('Classe F', 'Lycée');
 
 -- -- Insert sample teachers
 -- INSERT IGNORE INTO enseignants (username, email, module) VALUES

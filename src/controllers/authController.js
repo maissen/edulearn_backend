@@ -14,28 +14,21 @@ export const registerStudent = async (req, res) => {
 
     const hashed = await bcrypt.hash(password, 10);
 
-    // Start transaction
-    await db.query("START TRANSACTION");
-
     // Insert into users table
     await db.query(
-      "INSERT INTO users(username, email, password, role) VALUES (?, ?, ?, ?)",
-      [username, email, hashed, "etudiant"]
+      "INSERT INTO users(username, email, password, role, biography) VALUES (?, ?, ?, ?, ?)",
+      [username, email, hashed, "etudiant", null]
     );
 
-    // Insert into etudiants table with default class (you might want to make this configurable)
+    // Insert into etudiants table with default class
     await db.query(
       "INSERT INTO etudiants(username, email, classe_id) VALUES (?, ?, ?)",
       [username, email, 1] // Default to class ID 1
     );
 
-    // Commit transaction
-    await db.query("COMMIT");
-
     res.json({ message: "Student registered successfully" });
   } catch (err) {
-    // Rollback on error
-    await db.query("ROLLBACK");
+    console.error("Registration error:", err);
     res.status(500).json({ error: err.message });
   }
 };
@@ -52,13 +45,10 @@ export const registerTeacher = async (req, res) => {
 
     const hashed = await bcrypt.hash(password, 10);
 
-    // Start transaction
-    await db.query("START TRANSACTION");
-
     // Insert into users table
-    const [result] = await db.query(
-      "INSERT INTO users(username, email, password, role) VALUES (?, ?, ?, ?)",
-      [username, email, hashed, "enseignant"]
+    await db.query(
+      "INSERT INTO users(username, email, password, role, biography) VALUES (?, ?, ?, ?, ?)",
+      [username, email, hashed, "enseignant", null]
     );
 
     // Insert into enseignants table with default module
@@ -67,13 +57,9 @@ export const registerTeacher = async (req, res) => {
       [username, email, "General"]
     );
 
-    // Commit transaction
-    await db.query("COMMIT");
-
     res.json({ message: "Teacher registered successfully" });
   } catch (err) {
-    // Rollback on error
-    await db.query("ROLLBACK");
+    console.error("Registration error:", err);
     res.status(500).json({ error: err.message });
   }
 };
