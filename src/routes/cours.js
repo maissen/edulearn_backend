@@ -2,6 +2,7 @@ import express from "express";
 import {
   getAllCours,
   getCoursById,
+  getCourseCategories,
   createCours,
   updateCours,
   deleteCours
@@ -13,6 +14,7 @@ import { isTeacherOrAdmin } from "../middlewares/roleMiddleware.js";
 const router = express.Router();
 
 router.get("/", getAllCours);
+router.get("/categories", getCourseCategories);
 router.get("/:id", getCoursById);
 
 router.post("/", verifyToken, isTeacherOrAdmin, createCours);

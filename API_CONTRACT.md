@@ -201,8 +201,23 @@ Authorization: Bearer <token>
     "id": "number",
     "titre": "string",
     "description": "string",
+    "category": "string",
     "enseignant_id": "number"
   }
+]
+```
+
+### GET /cours/categories
+- **Description:** Get all unique course categories
+- **Auth:** None
+- **Success:** 200 OK
+- **Response:**
+```json
+[
+  "Mathematics",
+  "Literature",
+  "Science",
+  "History"
 ]
 ```
 
@@ -216,6 +231,7 @@ Authorization: Bearer <token>
   "id": "number",
   "titre": "string",
   "description": "string",
+  "category": "string",
   "enseignant_id": "number",
   "imageUrl": "string",
   "duration": "string",
@@ -291,6 +307,7 @@ Authorization: Bearer <token>
 {
   "titre": "string",
   "description": "string",
+  "category": "string",
   "enseignant_id": "number"
 }
 ```
@@ -309,7 +326,8 @@ Authorization: Bearer <token>
 ```json
 {
   "titre": "string",
-  "description": "string"
+  "description": "string",
+  "category": "string"
 }
 ```
 - **Success:** 200 OK
