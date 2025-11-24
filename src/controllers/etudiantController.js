@@ -1,6 +1,6 @@
 import { db } from "../../config/db.js";
-import StudentEnrollment from "../../models/StudentEnrollment.js";
-import QuizResult from "../../models/QuizResult.js";
+import StudentEnrollment from "../models/StudentEnrollment.js";
+import QuizResult from "../models/QuizResult.js";
 
 export const getAllEtudiants = async (req, res) => {
   const [rows] = await db.query("SELECT id, username, email, classe_id FROM etudiants");

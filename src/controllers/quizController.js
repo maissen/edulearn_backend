@@ -1,5 +1,5 @@
 import { db } from "../../config/db.js";
-import QuizResult from "../../models/QuizResult.js";
+import QuizResult from "../models/QuizResult.js";
 
 export const getAllQuiz = async (req, res) => {
   const [rows] = await db.query("SELECT id, titre, cours_id FROM quiz");
