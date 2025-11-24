@@ -699,6 +699,49 @@ Authorization: Bearer <token>
 ```
 - **Error:** 400 Bad Request if student not enrolled in course or course already completed
 
+### GET /etudiant/courses/in-progress
+- **Description:** Get all courses currently in progress for the authenticated student
+- **Auth:** Required (etudiant only)
+- **Success:** 200 OK
+- **Response:**
+```json
+[
+  {
+    "enrollment_id": "number",
+    "progress_percentage": "number",
+    "started_at": "string",
+    "updated_at": "string",
+    "id": "number",
+    "titre": "string",
+    "description": "string",
+    "category": "string",
+    "teacher_username": "string"
+  }
+]
+```
+
+### GET /etudiant/courses/completed
+- **Description:** Get all completed courses for the authenticated student
+- **Auth:** Required (etudiant only)
+- **Success:** 200 OK
+- **Response:**
+```json
+[
+  {
+    "enrollment_id": "number",
+    "progress_percentage": "number",
+    "started_at": "string",
+    "completed_at": "string",
+    "updated_at": "string",
+    "id": "number",
+    "titre": "string",
+    "description": "string",
+    "category": "string",
+    "teacher_username": "string"
+  }
+]
+```
+
 ---
 
 ## 9. Classe Routes

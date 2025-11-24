@@ -5,7 +5,9 @@ import {
   updateEtudiant,
   deleteEtudiant,
   startCourse,
-  completeCourse
+  completeCourse,
+  getCoursesInProgress,
+  getCompletedCourses
 } from "../controllers/etudiantController.js";
 
 import { verifyToken } from "../middlewares/authMiddleware.js";
@@ -19,6 +21,8 @@ router.put("/:id", verifyToken, isAdmin, updateEtudiant);
 router.delete("/:id", verifyToken, isAdmin, deleteEtudiant);
 
 // Course enrollment routes for students
+router.get("/courses/in-progress", verifyToken, isEtudiant, getCoursesInProgress);
+router.get("/courses/completed", verifyToken, isEtudiant, getCompletedCourses);
 router.post("/start-course", verifyToken, isEtudiant, startCourse);
 router.post("/complete-course", verifyToken, isEtudiant, completeCourse);
 

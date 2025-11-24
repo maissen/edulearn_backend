@@ -59,3 +59,62 @@ export const completeCourse = async (req, res) => {
     res.status(400).json({ error: error.message });
   }
 };
+
+export const getCoursesInProgress = async (req, res) => {
+  try {
+    const etudiantId = req.user.id; // From auth middleware
+
+    const [rows] = await db.query(`
+      SELECT
+        se.id as enrollment_id,
+        se.progress_percentage,
+        se.started_at,
+        se.updated_at,
+        c.id,
+        c.titre,
+        c.description,
+        c.category,
+        e.username as teacher_username
+      FROM student_enrollments se
+      JOIN cours c ON se.cours_id = c.id
+      JOIN enseignants e ON c.enseignant_id = e.id
+      WHERE se.etudiant_id = ? AND se.status = 'in_progress'
+      ORDER BY se.updated_at DESC
+    `, [etudiantId]);
+
+    res.json(rows);
+  } catch (error) {
+    console.error('Error fetching courses in progress:', error);
+    res.status(500).json({ error: 'Failed to fetch courses in progress' });
+  }
+};
+
+export const getCompletedCourses = async (req, res) => {
+  try {
+    const etudiantId = req.user.id; // From auth middleware
+
+    const [rows] = await db.query(`
+      SELECT
+        se.id as enrollment_id,
+        se.progress_percentage,
+        se.started_at,
+        se.completed_at,
+        se.updated_at,
+        c.id,
+        c.titre,
+        c.description,
+        c.category,
+        e.username as teacher_username
+      FROM student_enrollments se
+      JOIN cours c ON se.cours_id = c.id
+      JOIN enseignants e ON c.enseignant_id = e.id
+      WHERE se.etudiant_id = ? AND se.status = 'completed'
+      ORDER BY se.completed_at DESC
+    `, [etudiantId]);
+
+    res.json(rows);
+  } catch (error) {
+    console.error('Error fetching completed courses:', error);
+    res.status(500).json({ error: 'Failed to fetch completed courses' });
+  }
+};
