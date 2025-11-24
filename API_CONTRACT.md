@@ -152,7 +152,7 @@ Authorization: Bearer <token>
 ## 3. Profile Routes
 
 ### GET /profile
-- **Description:** Get current user profile (ENHANCED)
+- **Description:** Get current user profile
 - **Auth:** Required (any role)
 - **Success:** 200 OK
 - **Response:**
@@ -161,12 +161,27 @@ Authorization: Bearer <token>
   "id": "number",
   "username": "string",
   "email": "string",
-  "role": "string",
-  "bio": "string",
-  "specialization": "string",
-  "avatarUrl": "string"
+  "role": "string"
 }
 ```
+
+### PUT /profile
+- **Description:** Update current user profile (username only)
+- **Auth:** Required (any role)
+- **Body:**
+```json
+{
+  "username": "string"
+}
+```
+- **Success:** 200 OK
+- **Response:**
+```json
+{
+  "message": "Profile updated successfully"
+}
+```
+- **Error:** 400 Bad Request if username is empty or already taken
 
 ---
 
