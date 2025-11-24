@@ -3,6 +3,7 @@ import {
   getAllCours,
   getCoursById,
   getCourseCategories,
+  getCoursesGroupedByCategory,
   createCours,
   updateCours,
   deleteCours
@@ -15,6 +16,7 @@ const router = express.Router();
 
 router.get("/", getAllCours);
 router.get("/categories", getCourseCategories);
+router.get("/grouped-by-category", getCoursesGroupedByCategory);
 router.get("/:id", getCoursById);
 
 router.post("/", verifyToken, isTeacherOrAdmin, createCours);

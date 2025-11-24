@@ -221,6 +221,36 @@ Authorization: Bearer <token>
 ]
 ```
 
+### GET /cours/grouped-by-category
+- **Description:** Get all courses grouped by their categories
+- **Auth:** None
+- **Success:** 200 OK
+- **Response:**
+```json
+{
+  "Mathematics": [
+    {
+      "id": "number",
+      "titre": "string",
+      "description": "string",
+      "enseignant_id": "number",
+      "teacher_username": "string",
+      "teacher_email": "string"
+    }
+  ],
+  "Literature": [
+    {
+      "id": "number",
+      "titre": "string",
+      "description": "string",
+      "enseignant_id": "number",
+      "teacher_username": "string",
+      "teacher_email": "string"
+    }
+  ]
+}
+```
+
 ### GET /cours/:id
 - **Description:** Get course by ID (ENHANCED)
 - **Auth:** None
@@ -740,6 +770,35 @@ Authorization: Bearer <token>
     "teacher_username": "string"
   }
 ]
+```
+
+### GET /etudiant/is-enrolled/:courseId
+- **Description:** Check if the authenticated student is enrolled in a specific course
+- **Auth:** Required (etudiant only)
+- **Success:** 200 OK
+- **Response:**
+```json
+{
+  "isEnrolled": "boolean",
+  "status": "string", // "in_progress" or "completed" or null
+  "enrollmentId": "number", // null if not enrolled
+  "progressPercentage": "number",
+  "startedAt": "string", // ISO date string or null
+  "completedAt": "string" // ISO date string or null
+}
+```
+
+### GET /etudiant/has-completed/:courseId
+- **Description:** Check if the authenticated student has completed a specific course
+- **Auth:** Required (etudiant only)
+- **Success:** 200 OK
+- **Response:**
+```json
+{
+  "hasCompleted": "boolean",
+  "enrollmentId": "number", // null if not completed
+  "completedAt": "string" // ISO date string or null
+}
 ```
 
 ---

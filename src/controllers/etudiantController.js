@@ -118,3 +118,70 @@ export const getCompletedCourses = async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch completed courses' });
   }
 };
+
+export const checkEnrollmentStatus = async (req, res) => {
+  try {
+    const etudiantId = req.user.id; // From auth middleware
+    const { courseId } = req.params;
+
+    const [rows] = await db.query(`
+      SELECT
+        se.id as enrollment_id,
+        se.status,
+        se.progress_percentage,
+        se.started_at,
+        se.completed_at
+      FROM student_enrollments se
+      WHERE se.etudiant_id = ? AND se.cours_id = ?
+    `, [etudiantId, courseId]);
+
+    if (rows.length === 0) {
+      return res.json({
+        isEnrolled: false,
+        status: null,
+        enrollmentId: null,
+        progressPercentage: 0,
+        startedAt: null,
+        completedAt: null
+      });
+    }
+
+    const enrollment = rows[0];
+    res.json({
+      isEnrolled: true,
+      status: enrollment.status,
+      enrollmentId: enrollment.enrollment_id,
+      progressPercentage: enrollment.progress_percentage,
+      startedAt: enrollment.started_at,
+      completedAt: enrollment.completed_at
+    });
+  } catch (error) {
+    console.error('Error checking enrollment status:', error);
+    res.status(500).json({ error: 'Failed to check enrollment status' });
+  }
+};
+
+export const checkCompletionStatus = async (req, res) => {
+  try {
+    const etudiantId = req.user.id; // From auth middleware
+    const { courseId } = req.params;
+
+    const [rows] = await db.query(`
+      SELECT
+        se.id as enrollment_id,
+        se.status,
+        se.completed_at
+      FROM student_enrollments se
+      WHERE se.etudiant_id = ? AND se.cours_id = ? AND se.status = 'completed'
+    `, [etudiantId, courseId]);
+
+    res.json({
+      hasCompleted: rows.length > 0,
+      enrollmentId: rows.length > 0 ? rows[0].enrollment_id : null,
+      completedAt: rows.length > 0 ? rows[0].completed_at : null
+    });
+  } catch (error) {
+    console.error('Error checking completion status:', error);
+    res.status(500).json({ error: 'Failed to check completion status' });
+  }
+};
