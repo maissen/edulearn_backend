@@ -225,34 +225,41 @@ Authorization: Bearer <token>
 ```
 
 ### GET /cours/grouped-by-category
-- **Description:** Get all courses grouped by their categories
+- **Description:** Get all courses grouped by their categories with enrollment statistics
 - **Auth:** None
 - **Success:** 200 OK
 - **Response:**
 ```json
 {
-  "Mathematics": [
-    {
-      "id": "number",
-      "titre": "string",
-      "description": "string",
-      "enseignant_id": "number",
-      "teacher_username": "string",
-      "teacher_email": "string"
-    }
-  ],
-  "Literature": [
-    {
-      "id": "number",
-      "titre": "string",
-      "description": "string",
-      "enseignant_id": "number",
-      "teacher_username": "string",
-      "teacher_email": "string"
-    }
-  ]
+  "Python": {
+    "courses": [
+      {
+        "id": "number",
+        "titre": "string",
+        "description": "string",
+        "enseignant_id": "number",
+        "teacher_username": "string",
+        "teacher_email": "string"
+      }
+    ],
+    "enrolledStudents": "number"
+  },
+  "Cloud Computing": {
+    "courses": [
+      {
+        "id": "number",
+        "titre": "string",
+        "description": "string",
+        "enseignant_id": "number",
+        "teacher_username": "string",
+        "teacher_email": "string"
+      }
+    ],
+    "enrolledStudents": "number"
+  }
 }
 ```
+- **Note:** `enrolledStudents` counts all distinct students who have enrolled in any course within that category, including those who have completed the courses.
 
 ### GET /cours/:id
 - **Description:** Get course by ID (ENHANCED)

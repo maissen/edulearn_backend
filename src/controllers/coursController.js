@@ -20,6 +20,24 @@ export const getCourseCategories = async (req, res) => {
 
 export const getCoursesGroupedByCategory = async (req, res) => {
   try {
+    // First, get enrollment counts per category
+    const [enrollmentCounts] = await db.query(`
+      SELECT
+        c.category,
+        COUNT(DISTINCT se.etudiant_id) as enrolled_students
+      FROM cours c
+      LEFT JOIN student_enrollments se ON c.id = se.cours_id
+      WHERE c.category IS NOT NULL AND c.category != ''
+      GROUP BY c.category
+    `);
+
+    // Create a map of category to enrollment count
+    const enrollmentMap = {};
+    enrollmentCounts.forEach(row => {
+      enrollmentMap[row.category] = row.enrolled_students || 0;
+    });
+
+    // Get courses with teacher information
     const [rows] = await db.query(`
       SELECT
         c.id,
@@ -40,11 +58,14 @@ export const getCoursesGroupedByCategory = async (req, res) => {
     rows.forEach(course => {
       const category = course.category;
       if (!groupedCourses[category]) {
-        groupedCourses[category] = [];
+        groupedCourses[category] = {
+          courses: [],
+          enrolledStudents: enrollmentMap[category] || 0
+        };
       }
       // Remove category from individual course object since it's redundant
       const { category: cat, ...courseData } = course;
-      groupedCourses[category].push(courseData);
+      groupedCourses[category].courses.push(courseData);
     });
 
     res.json(groupedCourses);
