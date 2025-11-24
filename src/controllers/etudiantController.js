@@ -1,5 +1,6 @@
 import { db } from "../../config/db.js";
 import StudentEnrollment from "../../models/StudentEnrollment.js";
+import QuizResult from "../../models/QuizResult.js";
 
 export const getAllEtudiants = async (req, res) => {
   const [rows] = await db.query("SELECT id, username, email, classe_id FROM etudiants");
@@ -183,5 +184,18 @@ export const checkCompletionStatus = async (req, res) => {
   } catch (error) {
     console.error('Error checking completion status:', error);
     res.status(500).json({ error: 'Failed to check completion status' });
+  }
+};
+
+export const getStudentQuizResults = async (req, res) => {
+  try {
+    const etudiantId = req.user.id; // From auth middleware
+
+    const quizResults = await QuizResult.getStudentQuizResults(etudiantId);
+
+    res.json(quizResults);
+  } catch (error) {
+    console.error('Error fetching student quiz results:', error);
+    res.status(500).json({ error: 'Failed to fetch quiz results' });
   }
 };

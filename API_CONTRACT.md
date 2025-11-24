@@ -775,6 +775,28 @@ Authorization: Bearer <token>
 ]
 ```
 
+### GET /etudiant/quiz-results
+- **Description:** Get all quiz results for the authenticated student including scores and course information
+- **Auth:** Required (etudiant only)
+- **Success:** 200 OK
+- **Response:**
+```json
+[
+  {
+    "id": "number",
+    "etudiant_id": "number",
+    "quiz_id": "number",
+    "score": "number",
+    "total_questions": "number",
+    "correct_answers": "number",
+    "submitted_at": "string",
+    "quiz_title": "string",
+    "course_title": "string",
+    "course_category": "string"
+  }
+]
+```
+
 ### GET /etudiant/is-enrolled/:courseId
 - **Description:** Check if the authenticated student is enrolled in a specific course
 - **Auth:** Required (etudiant only)
