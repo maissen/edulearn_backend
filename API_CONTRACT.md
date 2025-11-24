@@ -301,6 +301,7 @@ Authorization: Bearer <token>
     "cours_id": "number",
     "quizzes": [
       {
+        "id": "number",         // Question ID (used for submissions)
         "question": "string",   // The actual question text
         "options": {
           "a": "string",
@@ -1021,24 +1022,38 @@ Authorization: Bearer <token>
 - **Note:** Each "quiz" is a single question with 4 multiple-choice options. The correct answers are not included in the response for security reasons - they're only used server-side during quiz submission and scoring.
 
 ### POST /quiz
-- **Description:** Create a new quiz (only the teacher who owns the course can create quizzes for their courses)
+- **Description:** Create a new quiz with questions (only the teacher who owns the course can create quizzes for their courses)
 - **Auth:** Required (enseignant only - must own the course)
 - **Body:**
 ```json
 {
   "titre": "string",
-  "cours_id": "number"
+  "cours_id": "number",
+  "questions": [
+    {
+      "question": "string",
+      "option_a": "string",
+      "option_b": "string",
+      "option_c": "string",
+      "option_d": "string",
+      "correct": "string (a|b|c|d)"
+    }
+  ]
 }
 ```
 - **Success:** 200 OK
 - **Response:**
 ```json
 {
-  "message": "Quiz créé"
+  "message": "Quiz created with questions",
+  "quizId": "number",
+  "questionsCount": "number"
 }
 ```
+- **Error:** 400 Bad Request if required fields are missing or question format is invalid
 - **Error:** 403 Forbidden if teacher doesn't own the course
 - **Error:** 404 Not Found if course doesn't exist
+- **Note:** All fields (titre, cours_id, questions) are required. Questions array must be non-empty. All questions are validated and created atomically with the quiz.
 
 ### DELETE /quiz/:id
 - **Description:** Delete a quiz (only the teacher who owns the course can delete quizzes from their courses)

@@ -84,7 +84,20 @@ export const getQuizByCourse = async (req, res) => {
 
 export const createQuiz = async (req, res) => {
   try {
-    const { titre, cours_id } = req.body;
+    const { titre, cours_id, questions } = req.body;
+
+    // Validate required fields
+    if (!titre || !cours_id || !questions) {
+      return res.status(400).json({
+        error: "Missing required fields: titre, cours_id, and questions are required"
+      });
+    }
+
+    if (!Array.isArray(questions) || questions.length === 0) {
+      return res.status(400).json({
+        error: "Questions must be a non-empty array"
+      });
+    }
 
     // Check if the course belongs to the authenticated teacher
     const [courseRows] = await db.query(
@@ -102,13 +115,64 @@ export const createQuiz = async (req, res) => {
       });
     }
 
-    await db.query("INSERT INTO quiz(titre, cours_id) VALUES (?, ?)", [
-      titre,
-      cours_id
-    ]);
+    // Validate all questions before starting transaction
+    for (const question of questions) {
+      const { question: qText, option_a, option_b, option_c, option_d, correct } = question;
 
-    res.json({ message: "Quiz créé" });
+      if (!qText || !option_a || !option_b || !option_c || !option_d || !correct) {
+        return res.status(400).json({
+          error: "Each question must have: question, option_a, option_b, option_c, option_d, and correct"
+        });
+      }
+
+      if (!['a', 'b', 'c', 'd'].includes(correct.toLowerCase())) {
+        return res.status(400).json({
+          error: "Correct answer must be 'a', 'b', 'c', or 'd'"
+        });
+      }
+    }
+
+    // Start transaction for atomic operation
+    const connection = await db.getConnection();
+    await connection.beginTransaction();
+
+    try {
+      // Insert the quiz
+      const [quizResult] = await connection.query(
+        "INSERT INTO quiz(titre, cours_id) VALUES (?, ?)",
+        [titre, cours_id]
+      );
+
+      const quizId = quizResult.insertId;
+
+      // Create all questions
+      for (const question of questions) {
+        const { question: qText, option_a, option_b, option_c, option_d, correct } = question;
+
+        await connection.query(
+          `INSERT INTO questions(quiz_id, question, option_a, option_b, option_c, option_d, correct)
+           VALUES (?, ?, ?, ?, ?, ?, ?)`,
+          [quizId, qText, option_a, option_b, option_c, option_d, correct.toLowerCase()]
+        );
+      }
+
+      await connection.commit();
+
+      res.json({
+        message: "Quiz created with questions",
+        quizId: quizId,
+        questionsCount: questions.length
+      });
+
+    } catch (error) {
+      await connection.rollback();
+      throw error;
+    } finally {
+      connection.release();
+    }
+
   } catch (err) {
+    console.error('Error creating quiz:', err);
     res.status(500).json({ error: err.message });
   }
 };

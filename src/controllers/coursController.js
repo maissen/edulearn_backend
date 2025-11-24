@@ -144,6 +144,7 @@ export const getCourseContent = async (req, res) => {
         const questions = questionsByQuiz[quiz.id] || [];
         questions.forEach(question => {
           allQuestions.push({
+            id: question.id,  // Include question ID for submissions
             question: question.question,
             options: question.options
           });

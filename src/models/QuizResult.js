@@ -30,8 +30,20 @@ export default class QuizResult {
     // Validate responses and count correct answers
     const validatedResponses = {};
 
-    questions.forEach(question => {
-      const studentAnswer = studentResponses[question.id];
+    questions.forEach((question, index) => {
+      // Try different possible keys for the answer
+      let studentAnswer = studentResponses[question.id]; // Actual question ID
+
+      // If not found, try alternative formats that frontend might use
+      if (!studentAnswer) {
+        studentAnswer = studentResponses[`questionId${question.id}`]; // questionId1, questionId2, etc.
+      }
+      if (!studentAnswer) {
+        studentAnswer = studentResponses[`questionId${index + 1}`]; // questionId1, questionId2, etc. (by index)
+      }
+      if (!studentAnswer) {
+        studentAnswer = studentResponses[`${index + 1}`]; // "1", "2", "3", etc.
+      }
 
       // Check if student provided an answer for this question
       if (studentAnswer && ['a', 'b', 'c', 'd'].includes(studentAnswer.toLowerCase())) {
