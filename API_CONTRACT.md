@@ -30,7 +30,7 @@ Authorization: Bearer <token>
 ## 2. Authentication Routes
 
 ### POST /auth/register/student
-- **Description:** Register a new student
+- **Description:** Register a new student (creates both user account and student record)
 - **Auth:** None
 - **Body:**
 ```json
@@ -47,9 +47,10 @@ Authorization: Bearer <token>
   "message": "Student registered successfully"
 }
 ```
+- **Note:** Creates entry in both `users` table (for authentication) and `etudiants` table (with default class_id = 1)
 
 ### POST /auth/register/teacher
-- **Description:** Register a new teacher
+- **Description:** Register a new teacher (creates both user account and teacher record)
 - **Auth:** None
 - **Body:**
 ```json
@@ -66,6 +67,7 @@ Authorization: Bearer <token>
   "message": "Teacher registered successfully"
 }
 ```
+- **Note:** Creates entry in both `users` table (for authentication) and `enseignants` table (with default module = "General")
 
 ### POST /auth/login/student
 - **Description:** Login as a student
