@@ -645,6 +645,42 @@ Authorization: Bearer <token>
 }
 ```
 
+### POST /etudiant/start-course
+- **Description:** Add a course to the student's in-progress courses list
+- **Auth:** Required (etudiant only)
+- **Body:**
+```json
+{
+  "coursId": "number"
+}
+```
+- **Success:** 200 OK
+- **Response:**
+```json
+{
+  "message": "Course added to in-progress list successfully"
+}
+```
+- **Error:** 400 Bad Request if student already enrolled or course doesn't exist
+
+### POST /etudiant/complete-course
+- **Description:** Mark an in-progress course as completed and move it to finished courses
+- **Auth:** Required (etudiant only)
+- **Body:**
+```json
+{
+  "coursId": "number"
+}
+```
+- **Success:** 200 OK
+- **Response:**
+```json
+{
+  "message": "Course marked as completed successfully"
+}
+```
+- **Error:** 400 Bad Request if student not enrolled in course or course already completed
+
 ---
 
 ## 9. Classe Routes

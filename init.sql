@@ -131,6 +131,25 @@ CREATE TABLE IF NOT EXISTS comments (
     INDEX idx_created_at (created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Student Course Enrollments table
+CREATE TABLE IF NOT EXISTS student_enrollments (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    etudiant_id INT NOT NULL,
+    cours_id INT NOT NULL,
+    status ENUM('in_progress', 'completed') NOT NULL DEFAULT 'in_progress',
+    progress_percentage DECIMAL(5,2) DEFAULT 0.00,
+    started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    completed_at TIMESTAMP NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (etudiant_id) REFERENCES etudiants(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (cours_id) REFERENCES cours(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    UNIQUE KEY unique_enrollment (etudiant_id, cours_id),
+    INDEX idx_etudiant_id (etudiant_id),
+    INDEX idx_cours_id (cours_id),
+    INDEX idx_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Images table
 CREATE TABLE IF NOT EXISTS images (
     id INT AUTO_INCREMENT PRIMARY KEY,

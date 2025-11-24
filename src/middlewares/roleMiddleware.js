@@ -18,3 +18,13 @@ export const isAdmin = (req, res, next) => {
     }
     next();
 };
+
+// Middleware spécifique pour les étudiants seulement
+export const isEtudiant = (req, res, next) => {
+    if (!req.user || req.user.role !== "etudiant") {
+        return res.status(403).json({
+            message: "Accès refusé : vous devez être étudiant."
+        });
+    }
+    next();
+};

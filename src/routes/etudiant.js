@@ -3,11 +3,13 @@ import {
   getAllEtudiants,
   addEtudiant,
   updateEtudiant,
-  deleteEtudiant
+  deleteEtudiant,
+  startCourse,
+  completeCourse
 } from "../controllers/etudiantController.js";
 
 import { verifyToken } from "../middlewares/authMiddleware.js";
-import { isAdmin } from "../middlewares/roleMiddleware.js";
+import { isAdmin, isEtudiant } from "../middlewares/roleMiddleware.js";
 
 const router = express.Router();
 
@@ -15,5 +17,9 @@ router.get("/", getAllEtudiants);
 router.post("/", verifyToken, isAdmin, addEtudiant);
 router.put("/:id", verifyToken, isAdmin, updateEtudiant);
 router.delete("/:id", verifyToken, isAdmin, deleteEtudiant);
+
+// Course enrollment routes for students
+router.post("/start-course", verifyToken, isEtudiant, startCourse);
+router.post("/complete-course", verifyToken, isEtudiant, completeCourse);
 
 export default router;
