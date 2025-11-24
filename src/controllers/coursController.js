@@ -80,6 +80,103 @@ export const getCoursById = async (req, res) => {
   res.json(rows[0]);
 };
 
+export const getCourseContent = async (req, res) => {
+  try {
+    const courseId = req.params.id;
+
+    // Get course details with teacher information
+    const [courseRows] = await db.query(`
+      SELECT
+        c.id,
+        c.titre,
+        c.description,
+        c.category,
+        c.enseignant_id,
+        e.username as teacher_username,
+        e.email as teacher_email
+      FROM cours c
+      LEFT JOIN enseignants e ON c.enseignant_id = e.id
+      WHERE c.id = ?
+    `, [courseId]);
+
+    if (courseRows.length === 0) {
+      return res.status(404).json({ error: 'Course not found' });
+    }
+
+    const course = courseRows[0];
+
+    // Get all quizzes for this course
+    const [quizRows] = await db.query("SELECT id, titre, cours_id FROM quiz WHERE cours_id = ?", [courseId]);
+
+    // Get questions for all quizzes in this course
+    if (quizRows.length > 0) {
+      const quizIds = quizRows.map(quiz => quiz.id);
+      const placeholders = quizIds.map(() => '?').join(',');
+      const [questionRows] = await db.query(
+        `SELECT id, quiz_id, question, option_a, option_b, option_c, option_d
+         FROM questions
+         WHERE quiz_id IN (${placeholders})
+         ORDER BY quiz_id, id`,
+        quizIds
+      );
+
+      // Group questions by quiz_id
+      const questionsByQuiz = {};
+      questionRows.forEach(question => {
+        if (!questionsByQuiz[question.quiz_id]) {
+          questionsByQuiz[question.quiz_id] = [];
+        }
+        questionsByQuiz[question.quiz_id].push({
+          id: question.id,
+          question: question.question,
+          options: {
+            a: question.option_a,
+            b: question.option_b,
+            c: question.option_c,
+            d: question.option_d
+          }
+        });
+      });
+
+      // Create a single test object containing all questions
+      const allQuestions = [];
+      quizRows.forEach(quiz => {
+        const questions = questionsByQuiz[quiz.id] || [];
+        questions.forEach(question => {
+          allQuestions.push({
+            question: question.question,
+            options: question.options
+          });
+        });
+      });
+
+      // Create test object with course info
+      course.test = {
+        title: `${course.category} quizzes test`,
+        id: course.id,
+        cours_id: course.id,
+        quizzes: allQuestions
+      };
+
+      // Remove the old quizzes field
+      delete course.quizzes;
+    } else {
+      course.test = {
+        title: `${course.category} quizzes test`,
+        id: course.id,
+        cours_id: course.id,
+        quizzes: []
+      };
+    }
+
+    res.json(course);
+
+  } catch (error) {
+    console.error('Error fetching course content:', error);
+    res.status(500).json({ error: 'Failed to fetch course content' });
+  }
+};
+
 export const createCours = async (req, res) => {
   const { titre, description, category, enseignant_id } = req.body;
 

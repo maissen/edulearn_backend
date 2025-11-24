@@ -282,8 +282,8 @@ Authorization: Bearer <token>
 ```
 
 ### GET /cours/:id/content
-- **Description:** Get full course content including video, duration, and detailed information
-- **Auth:** None (or authenticated for enrolled students)
+- **Description:** Get complete course content including course details and all quizzes as a single test object
+- **Auth:** None
 - **Success:** 200 OK
 - **Response:**
 ```json
@@ -291,20 +291,30 @@ Authorization: Bearer <token>
   "id": "number",
   "titre": "string",
   "description": "string",
-  "duration": "string",
-  "videoUrl": "string",
-  "imageUrl": "string",
-  "targetAudience": "string",
-  "prerequisites": "string",
-  "learningObjectives": ["string"],
-  "instructor": {
-    "name": "string",
-    "avatarUrl": "string",
-    "bio": "string",
-    "rating": "number"
+  "category": "string",
+  "enseignant_id": "number",
+  "teacher_username": "string",
+  "teacher_email": "string",
+  "test": {
+    "title": "string",          // e.g., "Python quizzes test"
+    "id": "number",             // Same as course id
+    "cours_id": "number",
+    "quizzes": [
+      {
+        "question": "string",   // The actual question text
+        "options": {
+          "a": "string",
+          "b": "string",
+          "c": "string",
+          "d": "string"
+        }
+      }
+    ]
   }
 }
 ```
+- **Error:** 404 Not Found if course doesn't exist
+- **Note:** All quizzes for the course are combined into a single test object. The test title is generated as "{Category} quizzes test".
 
 ### GET /cours/:id/related
 - **Description:** Get related courses for recommendations
@@ -988,7 +998,7 @@ Authorization: Bearer <token>
 ```
 
 ### GET /quiz/course/:courseId
-- **Description:** Get all quizzes for a specific course
+- **Description:** Get all quizzes for a specific course (each quiz is a single question with 4 answer options)
 - **Auth:** None
 - **Success:** 200 OK
 - **Response:**
@@ -996,11 +1006,19 @@ Authorization: Bearer <token>
 [
   {
     "id": "number",
-    "titre": "string",
-    "cours_id": "number"
+    "titre": "string",        // Quiz title (e.g., "Python Test 1")
+    "cours_id": "number",
+    "question": "string",     // The actual question text
+    "options": {
+      "a": "string",
+      "b": "string",
+      "c": "string",
+      "d": "string"
+    }
   }
 ]
 ```
+- **Note:** Each "quiz" is a single question with 4 multiple-choice options. The correct answers are not included in the response for security reasons - they're only used server-side during quiz submission and scoring.
 
 ### POST /quiz
 - **Description:** Create a new quiz (only the teacher who owns the course can create quizzes for their courses)
@@ -1036,9 +1054,9 @@ Authorization: Bearer <token>
 - **Error:** 404 Not Found if quiz doesn't exist
 
 ### POST /quiz/submit
-- **Description:** Submit quiz responses and calculate score (maximum score is 20, points distributed equally among questions)
+- **Description:** Submit quiz responses and calculate scores (supports both single quiz and batch submissions)
 - **Auth:** Required (etudiant only)
-- **Body:**
+- **Body (Single Quiz - Backward Compatible):**
 ```json
 {
   "quizId": "number",
@@ -1049,8 +1067,29 @@ Authorization: Bearer <token>
   }
 }
 ```
-- **Success:** 200 OK
-- **Response:**
+- **Body (Batch Submission - Multiple Quizzes):**
+```json
+{
+  "submissions": [
+    {
+      "quizId": "number",
+      "responses": {
+        "questionId1": "a",
+        "questionId2": "b"
+      }
+    },
+    {
+      "quizId": "number",
+      "responses": {
+        "questionId1": "c",
+        "questionId2": "a"
+      }
+    }
+  ]
+}
+```
+- **Success:** 200 OK (all successful), 207 Multi-Status (partial success)
+- **Response (Single Quiz):**
 ```json
 {
   "message": "Quiz submitted successfully",
@@ -1064,10 +1103,38 @@ Authorization: Bearer <token>
   }
 }
 ```
-- **Error:** 400 Bad Request if quizId or responses are invalid
-- **Error:** 409 Conflict if student has already submitted this quiz
-- **Error:** 404 Not Found if quiz has no questions
-- **Note:** Students can only submit a quiz once. Score is calculated as (correct_answers × points_per_question) where points_per_question = 20 ÷ total_questions.
+- **Response (Batch Submission):**
+```json
+{
+  "message": "Processed X quiz submission(s)",
+  "successful": "number",
+  "failed": "number",
+  "results": [
+    {
+      "quizId": "number",
+      "result": {
+        "id": "number",
+        "score": "number",
+        "totalQuestions": "number",
+        "correctAnswers": "number",
+        "maxScore": "number",
+        "pointsPerQuestion": "number"
+      }
+    }
+  ],
+  "errors": [
+    {
+      "index": "number",
+      "quizId": "number",
+      "error": "string"
+    }
+  ]
+}
+```
+- **Error:** 400 Bad Request if request format is invalid
+- **Error:** 409 Conflict if student has already submitted a quiz (individual errors in batch)
+- **Error:** 404 Not Found if quiz has no questions (individual errors in batch)
+- **Note:** Students can only submit each quiz once. Score is calculated as (correct_answers × points_per_question) where points_per_question = 20 ÷ total_questions.
 
 ---
 
