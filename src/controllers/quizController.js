@@ -1,4 +1,5 @@
 import { db } from "../../config/db.js";
+import QuizResult from "../../models/QuizResult.js";
 
 export const getAllQuiz = async (req, res) => {
   const [rows] = await db.query("SELECT id, titre, cours_id FROM quiz");
@@ -67,5 +68,39 @@ export const deleteQuiz = async (req, res) => {
     res.json({ message: "Quiz supprimé" });
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+};
+
+export const submitQuiz = async (req, res) => {
+  try {
+    const { quizId, responses } = req.body;
+    const etudiantId = req.user.id;
+
+    // Validate input
+    if (!quizId || !responses || typeof responses !== 'object') {
+      return res.status(400).json({
+        error: 'Invalid request. quizId and responses are required.'
+      });
+    }
+
+    // Submit quiz and calculate score
+    const result = await QuizResult.submitQuiz(etudiantId, quizId, responses);
+
+    res.json({
+      message: 'Quiz submitted successfully',
+      result: result
+    });
+  } catch (error) {
+    console.error('Error submitting quiz:', error);
+
+    if (error.message === 'Student has already submitted this quiz') {
+      return res.status(409).json({ error: error.message });
+    }
+
+    if (error.message === 'No questions found for this quiz') {
+      return res.status(404).json({ error: error.message });
+    }
+
+    res.status(500).json({ error: 'Failed to submit quiz' });
   }
 };

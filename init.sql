@@ -92,6 +92,24 @@ CREATE TABLE IF NOT EXISTS questions (
     INDEX idx_quiz_id (quiz_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Quiz Results table
+CREATE TABLE IF NOT EXISTS quiz_results (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    etudiant_id INT NOT NULL,
+    quiz_id INT NOT NULL,
+    score DECIMAL(5,2) NOT NULL, -- Score out of 20
+    total_questions INT NOT NULL,
+    correct_answers INT NOT NULL,
+    responses JSON, -- Store student's answers as JSON
+    submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (etudiant_id) REFERENCES etudiants(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (quiz_id) REFERENCES quiz(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    UNIQUE KEY unique_quiz_attempt (etudiant_id, quiz_id), -- One attempt per student per quiz
+    INDEX idx_etudiant_id (etudiant_id),
+    INDEX idx_quiz_id (quiz_id),
+    INDEX idx_submitted_at (submitted_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Exams (Examens) table
 CREATE TABLE IF NOT EXISTS examens (
     id INT AUTO_INCREMENT PRIMARY KEY,

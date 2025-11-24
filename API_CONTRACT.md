@@ -162,9 +162,12 @@ Authorization: Bearer <token>
   "username": "string",
   "email": "string",
   "role": "string",
-  "biography": "string"
+  "biography": "string",
+  "coursesInProgress": "number",
+  "coursesCompleted": "number"
 }
 ```
+- **Note:** For students (`role: "etudiant"`), `coursesInProgress` and `coursesCompleted` show actual enrollment counts. For other roles (teachers, admins), these values are 0.
 
 ### PUT /profile
 - **Description:** Update current user profile (username and biography)
@@ -1002,6 +1005,40 @@ Authorization: Bearer <token>
 ```
 - **Error:** 403 Forbidden if teacher doesn't own the course
 - **Error:** 404 Not Found if quiz doesn't exist
+
+### POST /quiz/submit
+- **Description:** Submit quiz responses and calculate score (maximum score is 20, points distributed equally among questions)
+- **Auth:** Required (etudiant only)
+- **Body:**
+```json
+{
+  "quizId": "number",
+  "responses": {
+    "questionId1": "a",
+    "questionId2": "b",
+    "questionId3": "c"
+  }
+}
+```
+- **Success:** 200 OK
+- **Response:**
+```json
+{
+  "message": "Quiz submitted successfully",
+  "result": {
+    "id": "number",
+    "score": "number",
+    "totalQuestions": "number",
+    "correctAnswers": "number",
+    "maxScore": "number",
+    "pointsPerQuestion": "number"
+  }
+}
+```
+- **Error:** 400 Bad Request if quizId or responses are invalid
+- **Error:** 409 Conflict if student has already submitted this quiz
+- **Error:** 404 Not Found if quiz has no questions
+- **Note:** Students can only submit a quiz once. Score is calculated as (correct_answers × points_per_question) where points_per_question = 20 ÷ total_questions.
 
 ---
 

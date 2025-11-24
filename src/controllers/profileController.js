@@ -6,7 +6,50 @@ export const getProfile = async (req, res) => {
     if (rows.length === 0) {
       return res.status(404).json({ message: "User not found" });
     }
-    res.json(rows[0]);
+
+    const profile = rows[0];
+    let courseStats = {};
+
+    // If user is a student, get course statistics
+    if (profile.role === 'etudiant') {
+      try {
+        // Get count of courses in progress
+        const [inProgressResult] = await db.query(`
+          SELECT COUNT(*) as count FROM student_enrollments
+          WHERE etudiant_id = ? AND status = 'in_progress'
+        `, [req.user.id]);
+
+        // Get count of completed courses
+        const [completedResult] = await db.query(`
+          SELECT COUNT(*) as count FROM student_enrollments
+          WHERE etudiant_id = ? AND status = 'completed'
+        `, [req.user.id]);
+
+        courseStats = {
+          coursesInProgress: inProgressResult[0].count || 0,
+          coursesCompleted: completedResult[0].count || 0
+        };
+      } catch (statsError) {
+        console.error('Error fetching course statistics:', statsError);
+        // Continue without course stats if there's an error
+        courseStats = {
+          coursesInProgress: 0,
+          coursesCompleted: 0
+        };
+      }
+    } else {
+      // For non-students, set course counts to 0
+      courseStats = {
+        coursesInProgress: 0,
+        coursesCompleted: 0
+      };
+    }
+
+    // Return profile with course statistics
+    res.json({
+      ...profile,
+      ...courseStats
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
