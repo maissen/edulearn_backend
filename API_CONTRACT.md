@@ -1,9 +1,11 @@
 # API Contract - School Platform
 
-Base URL: `http://79.137.34.134:5000`
+**Base URL:** `http://79.137.34.134:5000`
 
 ## Authentication
+
 Most endpoints require a JWT token in the Authorization header:
+
 ```
 Authorization: Bearer <token>
 ```
@@ -12,11 +14,11 @@ Authorization: Bearer <token>
 
 ## 1. Index Routes
 
-### GET `/`
-- **Description**: Health check endpoint
-- **Auth**: None
-- **Success**: `200 OK`
-- **Response**:
+### GET /
+- **Description:** Health check endpoint
+- **Auth:** None
+- **Success:** 200 OK
+- **Response:**
 ```json
 {
   "message": "API School Platform Running 🚀"
@@ -27,10 +29,10 @@ Authorization: Bearer <token>
 
 ## 2. Authentication Routes
 
-### POST `/auth/register/student`
-- **Description**: Register a new student
-- **Auth**: None
-- **Body**:
+### POST /auth/register/student
+- **Description:** Register a new student
+- **Auth:** None
+- **Body:**
 ```json
 {
   "username": "string",
@@ -38,18 +40,18 @@ Authorization: Bearer <token>
   "password": "string"
 }
 ```
-- **Success**: `200 OK`
-- **Response**: 
+- **Success:** 200 OK
+- **Response:**
 ```json
 {
   "message": "Student registered successfully"
 }
 ```
 
-### POST `/auth/register/teacher`
-- **Description**: Register a new teacher
-- **Auth**: None
-- **Body**:
+### POST /auth/register/teacher
+- **Description:** Register a new teacher
+- **Auth:** None
+- **Body:**
 ```json
 {
   "username": "string",
@@ -57,26 +59,26 @@ Authorization: Bearer <token>
   "password": "string"
 }
 ```
-- **Success**: `200 OK`
-- **Response**: 
+- **Success:** 200 OK
+- **Response:**
 ```json
 {
   "message": "Teacher registered successfully"
 }
 ```
 
-### POST `/auth/login/student`
-- **Description**: Login as a student
-- **Auth**: None
-- **Body**:
+### POST /auth/login/student
+- **Description:** Login as a student
+- **Auth:** None
+- **Body:**
 ```json
 {
   "email": "string",
   "password": "string"
 }
 ```
-- **Success**: `200 OK`
-- **Response**:
+- **Success:** 200 OK
+- **Response:**
 ```json
 {
   "token": "string",
@@ -89,20 +91,20 @@ Authorization: Bearer <token>
   }
 }
 ```
-- **Error**: `403 Forbidden` if user is not a student
+- **Error:** 403 Forbidden if user is not a student
 
-### POST `/auth/login/teacher`
-- **Description**: Login as a teacher
-- **Auth**: None
-- **Body**:
+### POST /auth/login/teacher
+- **Description:** Login as a teacher
+- **Auth:** None
+- **Body:**
 ```json
 {
   "email": "string",
   "password": "string"
 }
 ```
-- **Success**: `200 OK`
-- **Response**:
+- **Success:** 200 OK
+- **Response:**
 ```json
 {
   "token": "string",
@@ -115,20 +117,20 @@ Authorization: Bearer <token>
   }
 }
 ```
-- **Error**: `403 Forbidden` if user is not a teacher
+- **Error:** 403 Forbidden if user is not a teacher
 
-### POST `/auth/login/admin`
-- **Description**: Login as an admin
-- **Auth**: None
-- **Body**:
+### POST /auth/login/admin
+- **Description:** Login as an admin
+- **Auth:** None
+- **Body:**
 ```json
 {
   "email": "string",
   "password": "string"
 }
 ```
-- **Success**: `200 OK`
-- **Response**:
+- **Success:** 200 OK
+- **Response:**
 ```json
 {
   "token": "string",
@@ -141,23 +143,26 @@ Authorization: Bearer <token>
   }
 }
 ```
-- **Error**: `403 Forbidden` if user is not an admin
+- **Error:** 403 Forbidden if user is not an admin
 
 ---
 
 ## 3. Profile Routes
 
-### GET `/profile`
-- **Description**: Get current user profile
-- **Auth**: Required (any role)
-- **Success**: `200 OK`
-- **Response**:
+### GET /profile
+- **Description:** Get current user profile (ENHANCED)
+- **Auth:** Required (any role)
+- **Success:** 200 OK
+- **Response:**
 ```json
 {
   "id": "number",
   "username": "string",
   "email": "string",
-  "role": "string"
+  "role": "string",
+  "bio": "string",
+  "specialization": "string",
+  "avatarUrl": "string"
 }
 ```
 
@@ -165,11 +170,11 @@ Authorization: Bearer <token>
 
 ## 4. Cours Routes
 
-### GET `/cours`
-- **Description**: Get all courses
-- **Auth**: None
-- **Success**: `200 OK`
-- **Response**:
+### GET /cours
+- **Description:** Get all courses
+- **Auth:** None
+- **Success:** 200 OK
+- **Response:**
 ```json
 [
   {
@@ -181,24 +186,87 @@ Authorization: Bearer <token>
 ]
 ```
 
-### GET `/cours/:id`
-- **Description**: Get course by ID
-- **Auth**: None
-- **Success**: `200 OK`
-- **Response**:
+### GET /cours/:id
+- **Description:** Get course by ID (ENHANCED)
+- **Auth:** None
+- **Success:** 200 OK
+- **Response:**
 ```json
 {
   "id": "number",
   "titre": "string",
   "description": "string",
-  "enseignant_id": "number"
+  "enseignant_id": "number",
+  "imageUrl": "string",
+  "duration": "string",
+  "videoUrl": "string",
+  "createdAt": "string",
+  "updatedAt": "string"
 }
 ```
 
-### POST `/cours`
-- **Description**: Create a new course
-- **Auth**: Required (enseignant or admin)
-- **Body**:
+### GET /cours/:id/content
+- **Description:** Get full course content including video, duration, and detailed information
+- **Auth:** None (or authenticated for enrolled students)
+- **Success:** 200 OK
+- **Response:**
+```json
+{
+  "id": "number",
+  "titre": "string",
+  "description": "string",
+  "duration": "string",
+  "videoUrl": "string",
+  "imageUrl": "string",
+  "targetAudience": "string",
+  "prerequisites": "string",
+  "learningObjectives": ["string"],
+  "instructor": {
+    "name": "string",
+    "avatarUrl": "string",
+    "bio": "string",
+    "rating": "number"
+  }
+}
+```
+
+### GET /cours/:id/related
+- **Description:** Get related courses for recommendations
+- **Auth:** None
+- **Success:** 200 OK
+- **Response:**
+```json
+[
+  {
+    "id": "number",
+    "titre": "string",
+    "imageUrl": "string",
+    "price": "number",
+    "rating": "number",
+    "instructor": "string"
+  }
+]
+```
+
+### GET /cours/:id/enrollments
+- **Description:** Get enrollment statistics for a course
+- **Auth:** Required (enseignant or admin)
+- **Success:** 200 OK
+- **Response:**
+```json
+{
+  "totalEnrolled": "number",
+  "activeStudents": "number",
+  "completionRate": "number",
+  "averageRating": "number",
+  "lastActivity": "string"
+}
+```
+
+### POST /cours
+- **Description:** Create a new course
+- **Auth:** Required (enseignant only)
+- **Body:**
 ```json
 {
   "titre": "string",
@@ -206,37 +274,37 @@ Authorization: Bearer <token>
   "enseignant_id": "number"
 }
 ```
-- **Success**: `200 OK`
-- **Response**:
+- **Success:** 200 OK
+- **Response:**
 ```json
 {
   "message": "Cours ajouté"
 }
 ```
 
-### PUT `/cours/:id`
-- **Description**: Update a course
-- **Auth**: Required (enseignant or admin)
-- **Body**:
+### PUT /cours/:id
+- **Description:** Update a course
+- **Auth:** Required (enseignant only - own courses)
+- **Body:**
 ```json
 {
   "titre": "string",
   "description": "string"
 }
 ```
-- **Success**: `200 OK`
-- **Response**:
+- **Success:** 200 OK
+- **Response:**
 ```json
 {
   "message": "Cours modifié"
 }
 ```
 
-### DELETE `/cours/:id`
-- **Description**: Delete a course
-- **Auth**: Required (enseignant or admin)
-- **Success**: `200 OK`
-- **Response**:
+### DELETE /cours/:id
+- **Description:** Delete a course
+- **Auth:** Required (enseignant only - own courses)
+- **Success:** 200 OK
+- **Response:**
 ```json
 {
   "message": "Cours supprimé"
@@ -247,11 +315,11 @@ Authorization: Bearer <token>
 
 ## 5. Forum Routes
 
-### GET `/forum`
-- **Description**: Get all forum posts
-- **Auth**: None
-- **Success**: `200 OK`
-- **Response**:
+### GET /forum
+- **Description:** Get all forum posts
+- **Auth:** None
+- **Success:** 200 OK
+- **Response:**
 ```json
 [
   {
@@ -264,35 +332,35 @@ Authorization: Bearer <token>
 ]
 ```
 
-### POST `/forum`
-- **Description**: Create a new forum post
-- **Auth**: Required (any role)
-- **Body**:
+### POST /forum
+- **Description:** Create a new forum post
+- **Auth:** Required (any role)
+- **Body:**
 ```json
 {
   "titre": "string",
   "contenu": "string"
 }
 ```
-- **Success**: `200 OK`
-- **Response**:
+- **Success:** 200 OK
+- **Response:**
 ```json
 {
   "message": "Post ajouté"
 }
 ```
 
-### POST `/forum/:postId/comment`
-- **Description**: Add a comment to a post
-- **Auth**: Required (any role)
-- **Body**:
+### POST /forum/:postId/comment
+- **Description:** Add a comment to a post
+- **Auth:** Required (any role)
+- **Body:**
 ```json
 {
   "contenu": "string"
 }
 ```
-- **Success**: `200 OK`
-- **Response**:
+- **Success:** 200 OK
+- **Response:**
 ```json
 {
   "message": "Commentaire ajouté"
@@ -303,12 +371,12 @@ Authorization: Bearer <token>
 
 ## 6. Images Routes
 
-### POST `/images`
-- **Description**: Upload an image
-- **Auth**: None
-- **Body**: multipart/form-data with `image` field
-- **Success**: `200 OK`
-- **Response**:
+### POST /images
+- **Description:** Upload an image
+- **Auth:** None
+- **Body:** multipart/form-data with image field
+- **Success:** 200 OK
+- **Response:**
 ```json
 {
   "message": "Image uploadée",
@@ -316,11 +384,11 @@ Authorization: Bearer <token>
 }
 ```
 
-### GET `/images`
-- **Description**: Get all uploaded images
-- **Auth**: None
-- **Success**: `200 OK`
-- **Response**:
+### GET /images
+- **Description:** Get all uploaded images
+- **Auth:** None
+- **Success:** 200 OK
+- **Response:**
 ```json
 [
   {
@@ -334,11 +402,11 @@ Authorization: Bearer <token>
 
 ## 7. Enseignant Routes
 
-### GET `/enseignant`
-- **Description**: Get all teachers
-- **Auth**: None
-- **Success**: `200 OK`
-- **Response**:
+### GET /enseignant
+- **Description:** Get all teachers
+- **Auth:** None
+- **Success:** 200 OK
+- **Response:**
 ```json
 [
   {
@@ -350,10 +418,46 @@ Authorization: Bearer <token>
 ]
 ```
 
-### POST `/enseignant`
-- **Description**: Add a new teacher
-- **Auth**: Required (admin)
-- **Body**:
+### GET /enseignant/stats/:teacherId
+- **Description:** Get comprehensive statistics for a specific teacher
+- **Auth:** Required (enseignant or admin)
+- **Success:** 200 OK
+- **Response:**
+```json
+{
+  "totalStudents": "number",
+  "successRate": "number",
+  "activeCourses": "number",
+  "totalCourses": "number",
+  "averageRating": "number",
+  "satisfactionRate": "number",
+  "totalEnrollments": "number"
+}
+```
+
+### GET /enseignant/:teacherId/courses
+- **Description:** Get detailed courses for a specific teacher
+- **Auth:** Required (enseignant or admin)
+- **Success:** 200 OK
+- **Response:**
+```json
+[
+  {
+    "id": "number",
+    "titre": "string",
+    "description": "string",
+    "status": "string",
+    "enrolledStudents": "number",
+    "completionRate": "number",
+    "averageRating": "number"
+  }
+]
+```
+
+### POST /enseignant
+- **Description:** Add a new teacher
+- **Auth:** Required (admin)
+- **Body:**
 ```json
 {
   "username": "string",
@@ -361,18 +465,18 @@ Authorization: Bearer <token>
   "module": "string"
 }
 ```
-- **Success**: `200 OK`
-- **Response**:
+- **Success:** 200 OK
+- **Response:**
 ```json
 {
   "message": "Enseignant ajouté"
 }
 ```
 
-### PUT `/enseignant/:id`
-- **Description**: Update a teacher
-- **Auth**: Required (admin)
-- **Body**:
+### PUT /enseignant/:id
+- **Description:** Update a teacher
+- **Auth:** Required (admin)
+- **Body:**
 ```json
 {
   "username": "string",
@@ -380,19 +484,19 @@ Authorization: Bearer <token>
   "module": "string"
 }
 ```
-- **Success**: `200 OK`
-- **Response**:
+- **Success:** 200 OK
+- **Response:**
 ```json
 {
   "message": "Enseignant modifié"
 }
 ```
 
-### DELETE `/enseignant/:id`
-- **Description**: Delete a teacher
-- **Auth**: Required (admin)
-- **Success**: `200 OK`
-- **Response**:
+### DELETE /enseignant/:id
+- **Description:** Delete a teacher
+- **Auth:** Required (admin)
+- **Success:** 200 OK
+- **Response:**
 ```json
 {
   "message": "Enseignant supprimé"
@@ -403,11 +507,11 @@ Authorization: Bearer <token>
 
 ## 8. Etudiant Routes
 
-### GET `/etudiant`
-- **Description**: Get all students
-- **Auth**: None
-- **Success**: `200 OK`
-- **Response**:
+### GET /etudiant
+- **Description:** Get all students
+- **Auth:** None
+- **Success:** 200 OK
+- **Response:**
 ```json
 [
   {
@@ -419,10 +523,63 @@ Authorization: Bearer <token>
 ]
 ```
 
-### POST `/etudiant`
-- **Description**: Add a new student
-- **Auth**: Required (admin)
-- **Body**:
+### GET /etudiant/:studentId/stats
+- **Description:** Get comprehensive statistics for a specific student
+- **Auth:** Required (etudiant or admin)
+- **Success:** 200 OK
+- **Response:**
+```json
+{
+  "coursesInProgress": "number",
+  "completedCourses": "number",
+  "overallProgress": "number",
+  "averageGrade": "number",
+  "totalHoursLearned": "number"
+}
+```
+
+### GET /etudiant/:studentId/courses
+- **Description:** Get detailed course enrollment data for a student
+- **Auth:** Required (etudiant or admin)
+- **Success:** 200 OK
+- **Response:**
+```json
+{
+  "inProgress": [
+    {
+      "id": "number",
+      "titre": "string",
+      "category": "string",
+      "progress": "number",
+      "lastLesson": "string",
+      "imageUrl": "string"
+    }
+  ],
+  "completed": [
+    {
+      "id": "number",
+      "titre": "string",
+      "category": "string",
+      "completionDate": "string",
+      "grade": "number",
+      "imageUrl": "string"
+    }
+  ],
+  "recommended": [
+    {
+      "id": "number",
+      "titre": "string",
+      "category": "string",
+      "imageUrl": "string"
+    }
+  ]
+}
+```
+
+### POST /etudiant
+- **Description:** Add a new student
+- **Auth:** Required (admin)
+- **Body:**
 ```json
 {
   "username": "string",
@@ -430,18 +587,18 @@ Authorization: Bearer <token>
   "classe_id": "number"
 }
 ```
-- **Success**: `200 OK`
-- **Response**:
+- **Success:** 200 OK
+- **Response:**
 ```json
 {
   "message": "Étudiant ajouté"
 }
 ```
 
-### PUT `/etudiant/:id`
-- **Description**: Update a student
-- **Auth**: Required (admin)
-- **Body**:
+### PUT /etudiant/:id
+- **Description:** Update a student
+- **Auth:** Required (admin)
+- **Body:**
 ```json
 {
   "username": "string",
@@ -449,19 +606,19 @@ Authorization: Bearer <token>
   "classe_id": "number"
 }
 ```
-- **Success**: `200 OK`
-- **Response**:
+- **Success:** 200 OK
+- **Response:**
 ```json
 {
   "message": "Étudiant modifié"
 }
 ```
 
-### DELETE `/etudiant/:id`
-- **Description**: Delete a student
-- **Auth**: Required (admin)
-- **Success**: `200 OK`
-- **Response**:
+### DELETE /etudiant/:id
+- **Description:** Delete a student
+- **Auth:** Required (admin)
+- **Success:** 200 OK
+- **Response:**
 ```json
 {
   "message": "Étudiant supprimé"
@@ -472,11 +629,11 @@ Authorization: Bearer <token>
 
 ## 9. Classe Routes
 
-### GET `/classe`
-- **Description**: Get all classes
-- **Auth**: None
-- **Success**: `200 OK`
-- **Response**:
+### GET /classe
+- **Description:** Get all classes
+- **Auth:** None
+- **Success:** 200 OK
+- **Response:**
 ```json
 [
   {
@@ -487,47 +644,47 @@ Authorization: Bearer <token>
 ]
 ```
 
-### POST `/classe`
-- **Description**: Add a new class
-- **Auth**: Required (admin)
-- **Body**:
+### POST /classe
+- **Description:** Add a new class
+- **Auth:** Required (admin)
+- **Body:**
 ```json
 {
   "nom": "string",
   "niveau": "string"
 }
 ```
-- **Success**: `200 OK`
-- **Response**:
+- **Success:** 200 OK
+- **Response:**
 ```json
 {
   "message": "Classe ajoutée"
 }
 ```
 
-### PUT `/classe/:id`
-- **Description**: Update a class
-- **Auth**: Required (admin)
-- **Body**:
+### PUT /classe/:id
+- **Description:** Update a class
+- **Auth:** Required (admin)
+- **Body:**
 ```json
 {
   "nom": "string",
   "niveau": "string"
 }
 ```
-- **Success**: `200 OK`
-- **Response**:
+- **Success:** 200 OK
+- **Response:**
 ```json
 {
   "message": "Classe modifiée"
 }
 ```
 
-### DELETE `/classe/:id`
-- **Description**: Delete a class
-- **Auth**: Required (admin)
-- **Success**: `200 OK`
-- **Response**:
+### DELETE /classe/:id
+- **Description:** Delete a class
+- **Auth:** Required (admin)
+- **Success:** 200 OK
+- **Response:**
 ```json
 {
   "message": "Classe supprimée"
@@ -538,11 +695,11 @@ Authorization: Bearer <token>
 
 ## 10. Examen Routes
 
-### GET `/examen`
-- **Description**: Get all exams
-- **Auth**: None
-- **Success**: `200 OK`
-- **Response**:
+### GET /examen
+- **Description:** Get all exams
+- **Auth:** None
+- **Success:** 200 OK
+- **Response:**
 ```json
 [
   {
@@ -554,10 +711,10 @@ Authorization: Bearer <token>
 ]
 ```
 
-### POST `/examen`
-- **Description**: Add a new exam
-- **Auth**: Required (enseignant or admin)
-- **Body**:
+### POST /examen
+- **Description:** Add a new exam
+- **Auth:** Required (enseignant or admin)
+- **Body:**
 ```json
 {
   "titre": "string",
@@ -565,18 +722,18 @@ Authorization: Bearer <token>
   "date": "string (datetime)"
 }
 ```
-- **Success**: `200 OK`
-- **Response**:
+- **Success:** 200 OK
+- **Response:**
 ```json
 {
   "message": "Examen ajouté"
 }
 ```
 
-### PUT `/examen/:id`
-- **Description**: Update an exam
-- **Auth**: Required (enseignant or admin)
-- **Body**:
+### PUT /examen/:id
+- **Description:** Update an exam
+- **Auth:** Required (enseignant or admin)
+- **Body:**
 ```json
 {
   "titre": "string",
@@ -584,19 +741,19 @@ Authorization: Bearer <token>
   "date": "string (datetime)"
 }
 ```
-- **Success**: `200 OK`
-- **Response**:
+- **Success:** 200 OK
+- **Response:**
 ```json
 {
   "message": "Examen modifié"
 }
 ```
 
-### DELETE `/examen/:id`
-- **Description**: Delete an exam
-- **Auth**: Required (enseignant or admin)
-- **Success**: `200 OK`
-- **Response**:
+### DELETE /examen/:id
+- **Description:** Delete an exam
+- **Auth:** Required (enseignant or admin)
+- **Success:** 200 OK
+- **Response:**
 ```json
 {
   "message": "Examen supprimé"
@@ -607,11 +764,11 @@ Authorization: Bearer <token>
 
 ## 11. Quiz Routes
 
-### GET `/quiz`
-- **Description**: Get all quizzes
-- **Auth**: None
-- **Success**: `200 OK`
-- **Response**:
+### GET /quiz
+- **Description:** Get all quizzes
+- **Auth:** None
+- **Success:** 200 OK
+- **Response:**
 ```json
 [
   {
@@ -622,29 +779,29 @@ Authorization: Bearer <token>
 ]
 ```
 
-### POST `/quiz`
-- **Description**: Create a new quiz
-- **Auth**: Required (enseignant or admin)
-- **Body**:
+### POST /quiz
+- **Description:** Create a new quiz
+- **Auth:** Required (enseignant or admin)
+- **Body:**
 ```json
 {
   "titre": "string",
   "cours_id": "number"
 }
 ```
-- **Success**: `200 OK`
-- **Response**:
+- **Success:** 200 OK
+- **Response:**
 ```json
 {
   "message": "Quiz créé"
 }
 ```
 
-### DELETE `/quiz/:id`
-- **Description**: Delete a quiz
-- **Auth**: Required (enseignant or admin)
-- **Success**: `200 OK`
-- **Response**:
+### DELETE /quiz/:id
+- **Description:** Delete a quiz
+- **Auth:** Required (enseignant or admin)
+- **Success:** 200 OK
+- **Response:**
 ```json
 {
   "message": "Quiz supprimé"
@@ -655,10 +812,10 @@ Authorization: Bearer <token>
 
 ## 12. Question Routes
 
-### POST `/question`
-- **Description**: Add a question to a quiz
-- **Auth**: Required (enseignant or admin)
-- **Body**:
+### POST /question
+- **Description:** Add a question to a quiz
+- **Auth:** Required (enseignant or admin)
+- **Body:**
 ```json
 {
   "quiz_id": "number",
@@ -670,19 +827,19 @@ Authorization: Bearer <token>
   "correct": "string (a|b|c|d)"
 }
 ```
-- **Success**: `200 OK`
-- **Response**:
+- **Success:** 200 OK
+- **Response:**
 ```json
 {
   "message": "Question ajoutée"
 }
 ```
 
-### GET `/question/:quizId`
-- **Description**: Get all questions for a quiz
-- **Auth**: None
-- **Success**: `200 OK`
-- **Response**:
+### GET /question/:quizId
+- **Description:** Get all questions for a quiz
+- **Auth:** None
+- **Success:** 200 OK
+- **Response:**
 ```json
 [
   {
@@ -700,20 +857,59 @@ Authorization: Bearer <token>
 
 ---
 
+## 13. Admin Routes
+
+### GET /admin/stats
+- **Description:** Get overall platform statistics
+- **Auth:** Required (admin)
+- **Success:** 200 OK
+- **Response:**
+```json
+{
+  "totalUsers": "number",
+  "totalStudents": "number",
+  "totalTeachers": "number",
+  "totalCourses": "number",
+  "totalEnrollments": "number",
+  "averageRating": "number",
+  "activeCourses": "number"
+}
+```
+
+---
+
 ## Static Files
 
-### GET `/uploads/:filename`
-- **Description**: Access uploaded images
-- **Auth**: None
-- **Success**: `200 OK`
-- **Response**: Image file
+### GET /uploads/:filename
+- **Description:** Access uploaded images
+- **Auth:** None
+- **Success:** 200 OK
+- **Response:** Image file
 
 ---
 
 ## Role-Based Access Control
 
-- **Public**: Can access GET endpoints (except profile)
-- **Any authenticated user**: Can access profile, create forum posts/comments
-- **Admin**: Full access to all endpoints, can manage enseignants, etudiants, and classes
-- **Enseignant (Teacher)**: Can create/update/delete cours, examen, quiz, and questions
-- **Etudiant (Student)**: Can view content and participate in forums
+- **Public:** Can access GET endpoints (except profile)
+- **Any authenticated user:** Can access profile, create forum posts/comments
+- **Admin:** Full access to all endpoints, can manage enseignants, etudiants, and classes
+- **Enseignant (Teacher):** Can create/update/delete cours, examen, quiz, and questions
+- **Etudiant (Student):** Can view content and participate in forums
+
+---
+
+## Summary of Changes
+
+### New Routes Added:
+1. `GET /enseignant/stats/:teacherId` - Teacher statistics
+2. `GET /enseignant/:teacherId/courses` - Teacher's detailed courses
+3. `GET /cours/:id/content` - Full course content
+4. `GET /cours/:id/related` - Related courses
+5. `GET /cours/:id/enrollments` - Course enrollment data
+6. `GET /etudiant/:studentId/stats` - Student statistics
+7. `GET /etudiant/:studentId/courses` - Student's enrolled courses
+8. `GET /admin/stats` - Platform statistics
+
+### Enhanced Existing Routes:
+1. `GET /profile` - Added bio, specialization, avatarUrl
+2. `GET /cours/:id` - Added imageUrl, duration, videoUrl, timestamps
