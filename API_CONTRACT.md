@@ -781,9 +781,24 @@ Authorization: Bearer <token>
 ]
 ```
 
+### GET /quiz/course/:courseId
+- **Description:** Get all quizzes for a specific course
+- **Auth:** None
+- **Success:** 200 OK
+- **Response:**
+```json
+[
+  {
+    "id": "number",
+    "titre": "string",
+    "cours_id": "number"
+  }
+]
+```
+
 ### POST /quiz
-- **Description:** Create a new quiz
-- **Auth:** Required (enseignant or admin)
+- **Description:** Create a new quiz (only the teacher who owns the course can create quizzes for their courses)
+- **Auth:** Required (enseignant only - must own the course)
 - **Body:**
 ```json
 {
@@ -798,10 +813,12 @@ Authorization: Bearer <token>
   "message": "Quiz créé"
 }
 ```
+- **Error:** 403 Forbidden if teacher doesn't own the course
+- **Error:** 404 Not Found if course doesn't exist
 
 ### DELETE /quiz/:id
-- **Description:** Delete a quiz
-- **Auth:** Required (enseignant or admin)
+- **Description:** Delete a quiz (only the teacher who owns the course can delete quizzes from their courses)
+- **Auth:** Required (enseignant only - must own the course)
 - **Success:** 200 OK
 - **Response:**
 ```json
@@ -809,6 +826,8 @@ Authorization: Bearer <token>
   "message": "Quiz supprimé"
 }
 ```
+- **Error:** 403 Forbidden if teacher doesn't own the course
+- **Error:** 404 Not Found if quiz doesn't exist
 
 ---
 

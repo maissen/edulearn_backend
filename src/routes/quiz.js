@@ -1,6 +1,7 @@
 import express from "express";
 import {
   getAllQuiz,
+  getQuizByCourse,
   createQuiz,
   deleteQuiz
 } from "../controllers/quizController.js";
@@ -11,6 +12,7 @@ import { isTeacherOrAdmin } from "../middlewares/roleMiddleware.js";
 const router = express.Router();
 
 router.get("/", getAllQuiz);
+router.get("/course/:courseId", getQuizByCourse);
 router.post("/", verifyToken, isTeacherOrAdmin, createQuiz);
 router.delete("/:id", verifyToken, isTeacherOrAdmin, deleteQuiz);
 
