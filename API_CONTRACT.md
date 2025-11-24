@@ -27,23 +27,46 @@ Authorization: Bearer <token>
 
 ## 2. Authentication Routes
 
-### POST `/auth/register`
-- **Description**: Register a new user
+### POST `/auth/register/student`
+- **Description**: Register a new student
 - **Auth**: None
 - **Body**:
 ```json
 {
   "username": "string",
   "email": "string",
-  "password": "string",
-  "role": "string (admin|enseignant|etudiant)"
+  "password": "string"
 }
 ```
 - **Success**: `200 OK`
-- **Response**: User created confirmation
+- **Response**: 
+```json
+{
+  "message": "Student registered successfully"
+}
+```
 
-### POST `/auth/login`
-- **Description**: Login user
+### POST `/auth/register/teacher`
+- **Description**: Register a new teacher
+- **Auth**: None
+- **Body**:
+```json
+{
+  "username": "string",
+  "email": "string",
+  "password": "string"
+}
+```
+- **Success**: `200 OK`
+- **Response**: 
+```json
+{
+  "message": "Teacher registered successfully"
+}
+```
+
+### POST `/auth/login/student`
+- **Description**: Login as a student
 - **Auth**: None
 - **Body**:
 ```json
@@ -66,6 +89,59 @@ Authorization: Bearer <token>
   }
 }
 ```
+- **Error**: `403 Forbidden` if user is not a student
+
+### POST `/auth/login/teacher`
+- **Description**: Login as a teacher
+- **Auth**: None
+- **Body**:
+```json
+{
+  "email": "string",
+  "password": "string"
+}
+```
+- **Success**: `200 OK`
+- **Response**:
+```json
+{
+  "token": "string",
+  "expiration_date": "number",
+  "user": {
+    "id": "number",
+    "username": "string",
+    "email": "string",
+    "role": "string"
+  }
+}
+```
+- **Error**: `403 Forbidden` if user is not a teacher
+
+### POST `/auth/login/admin`
+- **Description**: Login as an admin
+- **Auth**: None
+- **Body**:
+```json
+{
+  "email": "string",
+  "password": "string"
+}
+```
+- **Success**: `200 OK`
+- **Response**:
+```json
+{
+  "token": "string",
+  "expiration_date": "number",
+  "user": {
+    "id": "number",
+    "username": "string",
+    "email": "string",
+    "role": "string"
+  }
+}
+```
+- **Error**: `403 Forbidden` if user is not an admin
 
 ---
 

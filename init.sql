@@ -138,11 +138,6 @@ CREATE TABLE IF NOT EXISTS images (
     INDEX idx_created_at (created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Insert default admin user
--- Password: admin123 (hashed with bcrypt)
-INSERT IGNORE INTO users (username, email, password, role) VALUES (
-    'admin',
-    'admin@gmail.com',
-    'admin1324',
-    'admin'
-);
+-- Note: Admin users should be created through the registration endpoint or manually
+-- To create an admin user, use: POST /auth/register/teacher (then manually update role to 'admin' in database)
+-- Or create directly in database with a properly hashed password using bcrypt
