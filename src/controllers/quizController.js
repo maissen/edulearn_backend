@@ -123,6 +123,28 @@ export const submitTest = async (req, res) => {
     }
     
     const result = await TestResult.submitTest(etudiantId, testID, submissions);
+    
+    // If the score is greater than 12, automatically complete the course
+    if (result.score > 12) {
+      // Get the course ID from the test ID
+      const [testRows] = await db.query("SELECT cours_id FROM test WHERE id = ?", [testID]);
+      if (testRows.length > 0) {
+        const courseId = testRows[0].cours_id;
+        
+        // Import StudentEnrollment model
+        const StudentEnrollment = (await import('../models/StudentEnrollment.js')).default;
+        
+        try {
+          // Complete the course for the student
+          await StudentEnrollment.completeCourse(etudiantId, courseId);
+          console.log(`Course ${courseId} automatically completed for student ${etudiantId} due to high test score (${result.score})`);
+        } catch (completionError) {
+          console.error('Error automatically completing course:', completionError);
+          // Don't fail the test submission if course completion fails
+        }
+      }
+    }
+    
     res.json({ message: "Submission successful", result });
   } catch (error) {
     if (error.message.includes("already submitted")) {
