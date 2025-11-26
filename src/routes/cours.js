@@ -5,6 +5,7 @@ import {
   getCourseCategories,
   getCoursesGroupedByCategory,
   getCourseContent,
+  getRelatedCourses,
   createCours,
   updateCours,
   deleteCours
@@ -20,6 +21,7 @@ router.get("/categories", getCourseCategories);
 router.get("/grouped-by-category", getCoursesGroupedByCategory);
 router.get("/:id", getCoursById);
 router.get("/:id/content", getCourseContent);
+router.get("/:id/related", getRelatedCourses);
 
 router.post("/", verifyToken, isTeacherOrAdmin, createCours);
 router.put("/:id", verifyToken, isTeacherOrAdmin, updateCours);

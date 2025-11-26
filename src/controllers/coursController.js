@@ -178,6 +178,46 @@ export const getCourseContent = async (req, res) => {
   }
 };
 
+// Get related courses for recommendations
+export const getRelatedCourses = async (req, res) => {
+  try {
+    const courseId = req.params.id;
+
+    // First, get the category of the current course
+    const [currentCourse] = await db.query(
+      "SELECT category FROM cours WHERE id = ?",
+      [courseId]
+    );
+
+    if (currentCourse.length === 0) {
+      return res.status(404).json({ error: 'Course not found' });
+    }
+
+    const category = currentCourse[0].category;
+
+    // Get related courses from the same category (excluding the current course)
+    const [rows] = await db.query(`
+      SELECT 
+        c.id,
+        c.titre,
+        '' as imageUrl,
+        0 as price,
+        0 as rating,
+        e.username as instructor
+      FROM cours c
+      LEFT JOIN enseignants e ON c.enseignant_id = e.id
+      WHERE c.category = ? AND c.id != ?
+      LIMIT 5
+    `, [category, courseId]);
+
+    res.json(rows);
+
+  } catch (error) {
+    console.error('Error fetching related courses:', error);
+    res.status(500).json({ error: 'Failed to fetch related courses' });
+  }
+};
+
 export const createCours = async (req, res) => {
   const { titre, description, category, enseignant_id } = req.body;
 
