@@ -7,23 +7,18 @@ export const registerStudent = async (req, res) => {
   const { username, email, password } = req.body;
 
   try {
-    const [user] = await db.query("SELECT * FROM users WHERE email = ?", [email]);
-    if (user.length > 0) {
+    // Check if student already exists in etudiants table
+    const [existingStudent] = await db.query("SELECT * FROM etudiants WHERE email = ?", [email]);
+    if (existingStudent.length > 0) {
       return res.status(400).json({ message: "Email already exists" });
     }
 
     const hashed = await bcrypt.hash(password, 10);
 
-    // Insert into users table
+    // Insert directly into etudiants table with default class and password
     await db.query(
-      "INSERT INTO users(username, email, password, role, biography) VALUES (?, ?, ?, ?, ?)",
-      [username, email, hashed, "etudiant", null]
-    );
-
-    // Insert into etudiants table with default class
-    await db.query(
-      "INSERT INTO etudiants(username, email, classe_id) VALUES (?, ?, ?)",
-      [username, email, 1] // Default to class ID 1
+      "INSERT INTO etudiants(username, email, password, classe_id) VALUES (?, ?, ?, ?)",
+      [username, email, hashed, 1] // Default to class ID 1
     );
 
     res.json({ message: "Student registered successfully" });
@@ -38,23 +33,18 @@ export const registerTeacher = async (req, res) => {
   const { username, email, password } = req.body;
 
   try {
-    const [user] = await db.query("SELECT * FROM users WHERE email = ?", [email]);
-    if (user.length > 0) {
+    // Check if teacher already exists in enseignants table
+    const [existingTeacher] = await db.query("SELECT * FROM enseignants WHERE email = ?", [email]);
+    if (existingTeacher.length > 0) {
       return res.status(400).json({ message: "Email already exists" });
     }
 
     const hashed = await bcrypt.hash(password, 10);
 
-    // Insert into users table
+    // Insert directly into enseignants table with password
     await db.query(
-      "INSERT INTO users(username, email, password, role, biography) VALUES (?, ?, ?, ?, ?)",
-      [username, email, hashed, "enseignant", null]
-    );
-
-    // Insert into enseignants table with default module
-    await db.query(
-      "INSERT INTO enseignants(username, email, module) VALUES (?, ?, ?)",
-      [username, email, "General"]
+      "INSERT INTO enseignants(username, email, password, module) VALUES (?, ?, ?, ?)",
+      [username, email, hashed, "General"]
     );
 
     res.json({ message: "Teacher registered successfully" });
@@ -64,24 +54,61 @@ export const registerTeacher = async (req, res) => {
   }
 };
 
+// Register Admin
+export const registerAdmin = async (req, res) => {
+  const { username, email, password } = req.body;
+
+  try {
+    // Check if admin already exists in admins table
+    const [existingAdmin] = await db.query("SELECT * FROM admins WHERE email = ?", [email]);
+    if (existingAdmin.length > 0) {
+      return res.status(400).json({ message: "Email already exists" });
+    }
+
+    const hashed = await bcrypt.hash(password, 10);
+
+    // Insert directly into admins table
+    await db.query(
+      "INSERT INTO admins(username, email, password) VALUES (?, ?, ?)",
+      [username, email, hashed]
+    );
+
+    res.json({ message: "Admin registered successfully" });
+  } catch (err) {
+    console.error("Registration error:", err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
 // Helper function for login logic
-const performLogin = async (req, res, expectedRole) => {
+const performLogin = async (req, res, tableName, role) => {
   const { email, password } = req.body;
 
   try {
-    const [rows] = await db.query("SELECT * FROM users WHERE email = ?", [email]);
+    let user = null;
+    let query = "";
+
+    // Determine which table to query based on role
+    switch (tableName) {
+      case "etudiants":
+        query = "SELECT id, username, email, password FROM etudiants WHERE email = ?";
+        break;
+      case "enseignants":
+        query = "SELECT id, username, email, password FROM enseignants WHERE email = ?";
+        break;
+      case "admins":
+        query = "SELECT id, username, email, password FROM admins WHERE email = ?";
+        break;
+      default:
+        return res.status(500).json({ message: "Invalid table for login" });
+    }
+
+    const [rows] = await db.query(query, [email]);
     if (rows.length === 0) {
       return res.status(400).json({ message: "User not found" });
     }
 
-    const user = rows[0];
-
-    // Verify role matches expected role
-    if (user.role !== expectedRole) {
-      return res.status(403).json({ 
-        message: `Access denied. This endpoint is for ${expectedRole} only.` 
-      });
-    }
+    user = rows[0];
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
@@ -89,7 +116,7 @@ const performLogin = async (req, res, expectedRole) => {
     }
 
     const expiresIn = "70d";
-    const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, process.env.JWT_SECRET, {
+    const token = jwt.sign({ id: user.id, email: user.email, role }, process.env.JWT_SECRET, {
       expiresIn
     });
 
@@ -103,7 +130,7 @@ const performLogin = async (req, res, expectedRole) => {
         id: user.id,
         username: user.username,
         email: user.email,
-        role: user.role
+        role: role
       }
     });
   } catch (err) {
@@ -113,15 +140,15 @@ const performLogin = async (req, res, expectedRole) => {
 
 // Login Student
 export const loginStudent = async (req, res) => {
-  await performLogin(req, res, "etudiant");
+  await performLogin(req, res, "etudiants", "etudiant");
 };
 
 // Login Teacher
 export const loginTeacher = async (req, res) => {
-  await performLogin(req, res, "enseignant");
+  await performLogin(req, res, "enseignants", "enseignant");
 };
 
 // Login Admin
 export const loginAdmin = async (req, res) => {
-  await performLogin(req, res, "admin");
+  await performLogin(req, res, "admins", "admin");
 };

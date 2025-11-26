@@ -30,7 +30,7 @@ Authorization: Bearer <token>
 ## 2. Authentication Routes
 
 ### POST /auth/register/student
-- **Description:** Register a new student (creates both user account and student record)
+- **Description:** Register a new student
 - **Auth:** None
 - **Body:**
 ```json
@@ -47,10 +47,10 @@ Authorization: Bearer <token>
   "message": "Student registered successfully"
 }
 ```
-- **Note:** Creates entry in both `users` table (for authentication) and `etudiants` table (with default class_id = 1)
+- **Note:** Creates entry directly in `etudiants` table (with default class_id = 1)
 
 ### POST /auth/register/teacher
-- **Description:** Register a new teacher (creates both user account and teacher record)
+- **Description:** Register a new teacher
 - **Auth:** None
 - **Body:**
 ```json
@@ -67,7 +67,27 @@ Authorization: Bearer <token>
   "message": "Teacher registered successfully"
 }
 ```
-- **Note:** Creates entry in both `users` table (for authentication) and `enseignants` table (with default module = "General")
+- **Note:** Creates entry directly in `enseignants` table (with default module = "General")
+
+### POST /auth/register/admin
+- **Description:** Register a new admin
+- **Auth:** None
+- **Body:**
+```json
+{
+  "username": "string",
+  "email": "string",
+  "password": "string"
+}
+```
+- **Success:** 200 OK
+- **Response:**
+```json
+{
+  "message": "Admin registered successfully"
+}
+```
+- **Note:** Creates entry directly in `admins` table
 
 ### POST /auth/login/student
 - **Description:** Login as a student
@@ -695,7 +715,7 @@ Authorization: Bearer <token>
 - **Description:** Update a student
 - **Auth:** Required (admin)
 - **Body:**
-```json
+``json
 {
   "username": "string",
   "email": "string",

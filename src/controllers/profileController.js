@@ -2,7 +2,23 @@ import { db } from "../../config/db.js";
 
 export const getProfile = async (req, res) => {
   try {
-    const [rows] = await db.query("SELECT id, username, email, role, biography FROM users WHERE id = ?", [req.user.id]);
+    // Determine which table to query based on user role
+    let query = "";
+    switch (req.user.role) {
+      case "admin":
+        query = "SELECT id, username, email, 'admin' as role, biography FROM admins WHERE id = ?";
+        break;
+      case "enseignant":
+        query = "SELECT id, username, email, 'enseignant' as role, biography FROM enseignants WHERE id = ?";
+        break;
+      case "etudiant":
+        query = "SELECT id, username, email, 'etudiant' as role, biography FROM etudiants WHERE id = ?";
+        break;
+      default:
+        return res.status(404).json({ message: "User not found" });
+    }
+
+    const [rows] = await db.query(query, [req.user.id]);
     if (rows.length === 0) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -70,20 +86,33 @@ export const updateProfile = async (req, res) => {
         return res.status(400).json({ message: "Username cannot be empty" });
       }
 
-      // Check if username is already taken by another user
-      const [existingUser] = await db.query(
-        "SELECT id FROM users WHERE username = ? AND id != ?",
-        [username, req.user.id]
-      );
+      // Check if username is already taken by another user in the appropriate table
+      let existingUserQuery = "";
+      switch (req.user.role) {
+        case "admin":
+          existingUserQuery = "SELECT id FROM admins WHERE username = ? AND id != ?";
+          break;
+        case "enseignant":
+          existingUserQuery = "SELECT id FROM enseignants WHERE username = ? AND id != ?";
+          break;
+        case "etudiant":
+          existingUserQuery = "SELECT id FROM etudiants WHERE username = ? AND id != ?";
+          break;
+        default:
+          return res.status(400).json({ message: "Invalid user role" });
+      }
+
+      const [existingUser] = await db.query(existingUserQuery, [username, req.user.id]);
 
       if (existingUser.length > 0) {
         return res.status(400).json({ message: "Username already taken" });
       }
     }
 
-    // Build dynamic update query
+    // Build dynamic update query based on user role
     let updateFields = [];
     let updateValues = [];
+    let updateQuery = "";
 
     if (username) {
       updateFields.push("username = ?");
@@ -97,7 +126,20 @@ export const updateProfile = async (req, res) => {
 
     updateValues.push(req.user.id);
 
-    const updateQuery = `UPDATE users SET ${updateFields.join(", ")} WHERE id = ?`;
+    // Determine which table to update based on user role
+    switch (req.user.role) {
+      case "admin":
+        updateQuery = `UPDATE admins SET ${updateFields.join(", ")} WHERE id = ?`;
+        break;
+      case "enseignant":
+        updateQuery = `UPDATE enseignants SET ${updateFields.join(", ")} WHERE id = ?`;
+        break;
+      case "etudiant":
+        updateQuery = `UPDATE etudiants SET ${updateFields.join(", ")} WHERE id = ?`;
+        break;
+      default:
+        return res.status(400).json({ message: "Invalid user role" });
+    }
 
     await db.query(updateQuery, updateValues);
 

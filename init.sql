@@ -4,20 +4,6 @@ USE school_db;
 
 -- ====================[ TABLE SCHEMA ]========================
 
--- Users table
-CREATE TABLE IF NOT EXISTS users (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    username VARCHAR(255) NOT NULL,
-    email VARCHAR(255) NOT NULL UNIQUE,
-    password VARCHAR(255) NOT NULL,
-    role ENUM('admin', 'enseignant', 'etudiant') NOT NULL DEFAULT 'etudiant',
-    biography TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_email (email),
-    INDEX idx_role (role)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
 -- Classes
 CREATE TABLE IF NOT EXISTS classes (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -33,7 +19,9 @@ CREATE TABLE IF NOT EXISTS enseignants (
     id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
     module VARCHAR(255) NOT NULL,
+    biography TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_email (email)
@@ -44,12 +32,25 @@ CREATE TABLE IF NOT EXISTS etudiants (
     id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
     classe_id INT NOT NULL,
+    biography TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (classe_id) REFERENCES classes(id) ON DELETE CASCADE ON UPDATE CASCADE,
     INDEX idx_email (email),
     INDEX idx_classe_id (classe_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Admin users
+CREATE TABLE IF NOT EXISTS admins (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_email (email)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Courses
@@ -138,6 +139,34 @@ CREATE TABLE IF NOT EXISTS images (
     url VARCHAR(500) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_created_at (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Forum posts
+CREATE TABLE IF NOT EXISTS forum (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    titre VARCHAR(255) NOT NULL,
+    contenu TEXT NOT NULL,
+    user_id INT NOT NULL,
+    user_role ENUM('admin', 'enseignant', 'etudiant') NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_user_id (user_id),
+    INDEX idx_user_role (user_role)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Comments on forum posts
+CREATE TABLE IF NOT EXISTS comments (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    contenu TEXT NOT NULL,
+    post_id INT NOT NULL,
+    user_id INT NOT NULL,
+    user_role ENUM('admin', 'enseignant', 'etudiant') NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (post_id) REFERENCES forum(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    INDEX idx_post_id (post_id),
+    INDEX idx_user_id (user_id),
+    INDEX idx_user_role (user_role)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
@@ -409,19 +438,19 @@ INSERT IGNORE INTO test_questions (test_id, question, option_a, option_b, option
 (24, 'What is an Activity in Android?', 'Background service', 'UI screen', 'Database', 'Network manager', 'b'),
 (24, 'Which company developed Android?', 'Apple', 'Microsoft', 'Google', 'Samsung', 'c');
 
--- ====================[ SAMPLE USERS ]========================
-INSERT IGNORE INTO users (username, email, password, role) VALUES
-('admin_user', 'admin@school.com', '$2b$10$rVHMO/JrxDMM6QlDyzo7kOjBv.LvgF.hy.B11HGM5Ea6PXCsP2kW2', 'admin'),
-('teacher_user', 'teacher@school.com', '$2b$10$rVHMO/JrxDMM6QlDyzo7kOjBv.LvgF.hy.B11HGM5Ea6PXCsP2kW2', 'enseignant'),
-('student_one', 'student1@school.com', '$2b$10$rVHMO/JrxDMM6QlDyzo7kOjBv.LvgF.hy.B11HGM5Ea6PXCsP2kW2', 'etudiant'),
-('student_two', 'student2@school.com', '$2b$10$rVHMO/JrxDMM6QlDyzo7kOjBv.LvgF.hy.B11HGM5Ea6PXCsP2kW2', 'etudiant'),
-('student_three', 'student3@school.com', '$2b$10$rVHMO/JrxDMM6QlDyzo7kOjBv.LvgF.hy.B11HGM5Ea6PXCsP2kW2', 'etudiant');
+-- ====================[ SAMPLE ADMINS ]========================
+INSERT IGNORE INTO admins (username, email, password) VALUES
+('admin_user', 'admin@school.com', '$2b$10$rVHMO/JrxDMM6QlDyzo7kOjBv.LvgF.hy.B11HGM5Ea6PXCsP2kW2');
+
+-- ====================[ SAMPLE TEACHERS ]========================
+INSERT IGNORE INTO enseignants (username, email, password, module) VALUES
+('teacher_user', 'teacher@school.com', '$2b$10$rVHMO/JrxDMM6QlDyzo7kOjBv.LvgF.hy.B11HGM5Ea6PXCsP2kW2', 'General');
 
 -- ====================[ SAMPLE STUDENTS ]========================
-INSERT IGNORE INTO etudiants (username, email, classe_id) VALUES
-('student_one', 'student1@school.com', 1),
-('student_two', 'student2@school.com', 2),
-('student_three', 'student3@school.com', 3);
+INSERT IGNORE INTO etudiants (username, email, password, classe_id) VALUES
+('student_one', 'student1@school.com', '$2b$10$rVHMO/JrxDMM6QlDyzo7kOjBv.LvgF.hy.B11HGM5Ea6PXCsP2kW2', 1),
+('student_two', 'student2@school.com', '$2b$10$rVHMO/JrxDMM6QlDyzo7kOjBv.LvgF.hy.B11HGM5Ea6PXCsP2kW2', 2),
+('student_three', 'student3@school.com', '$2b$10$rVHMO/JrxDMM6QlDyzo7kOjBv.LvgF.hy.B11HGM5Ea6PXCsP2kW2', 3);
 
 -- ====================[ SAMPLE STUDENT ENROLLMENTS ]========================
 INSERT IGNORE INTO student_enrollments (etudiant_id, cours_id, status, progress_percentage) VALUES
