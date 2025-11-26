@@ -105,6 +105,49 @@ export const getCourseContent = async (req, res) => {
 
     const course = courseRows[0];
 
+    // Check if student has taken the test (if authenticated)
+    let hasTakenTest = false;
+    let studentScore = null;
+    let totalScore = null;
+    if (req.user && req.user.role === 'etudiant') {
+      try {
+        // First, get the student ID using the email from the token
+        const [studentRows] = await db.query(
+          "SELECT id FROM etudiants WHERE email = ?",
+          [req.user.email]
+        );
+        
+        if (studentRows.length > 0) {
+          const studentId = studentRows[0].id;
+          
+          // Check if there's a test for this course
+          const [testRows] = await db.query(
+            "SELECT id FROM test WHERE cours_id = ?",
+            [courseId]
+          );
+          
+          if (testRows.length > 0) {
+            const testId = testRows[0].id;
+            
+            // Check if student has taken this test and get their score
+            const [resultRows] = await db.query(
+              "SELECT score, total_questions FROM test_results WHERE etudiant_id = ? AND test_id = ?",
+              [studentId, testId]
+            );
+            
+            if (resultRows.length > 0) {
+              hasTakenTest = true;
+              studentScore = resultRows[0].score;
+              totalScore = 20; // Tests are scored out of 20
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error checking test completion status:', error);
+        // Don't fail the request if we can't determine test status
+      }
+    }
+
     // Get all tests for this course (changed from 'quiz' to 'test')
     const [testRows] = await db.query("SELECT id, titre, cours_id FROM test WHERE cours_id = ?", [courseId]);
 
@@ -159,6 +202,11 @@ export const getCourseContent = async (req, res) => {
         quizzes: allQuestions
       };
 
+      // Add test result fields
+      course.test.hasTakenTest = hasTakenTest;
+      course.test.studentScore = studentScore;
+      course.test.totalScore = totalScore;
+
       // Remove the old quizzes field
       delete course.quizzes;
     } else {
@@ -166,7 +214,10 @@ export const getCourseContent = async (req, res) => {
         title: `${course.category} quizzes test`,
         id: course.id,
         cours_id: course.id,
-        quizzes: []
+        quizzes: [],
+        hasTakenTest: hasTakenTest,
+        studentScore: studentScore,
+        totalScore: totalScore
       };
     }
 
