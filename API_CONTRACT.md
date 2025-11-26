@@ -296,13 +296,13 @@ Authorization: Bearer <token>
   "teacher_username": "string",
   "teacher_email": "string",
   "test": {
-    "title": "string",          // e.g., "Python quizzes test"
-    "id": "number",             // Same as course id
+    "id": "number",                // test (exam) id
     "cours_id": "number",
-    "quizzes": [
+    "titre": "string",             // test title
+    "questions": [
       {
-        "id": "number",         // Question ID (used for submissions)
-        "question": "string",   // The actual question text
+        "id": "number",           // question id (use for submissions)
+        "question": "string",
         "options": {
           "a": "string",
           "b": "string",
@@ -793,8 +793,8 @@ Authorization: Bearer <token>
 ]
 ```
 
-### GET /etudiant/quiz-results
-- **Description:** Get all quiz results for the authenticated student including scores and course information
+### GET /etudiant/test-results
+- **Description:** Get all test results for the authenticated student including scores and test/course info
 - **Auth:** Required (etudiant only)
 - **Success:** 200 OK
 - **Response:**
@@ -803,14 +803,13 @@ Authorization: Bearer <token>
   {
     "id": "number",
     "etudiant_id": "number",
-    "quiz_id": "number",
+    "test_id": "number",
     "score": "number",
     "total_questions": "number",
     "correct_answers": "number",
     "submitted_at": "string",
-    "quiz_title": "string",
-    "course_title": "string",
-    "course_category": "string"
+    "test_title": "string",
+    "cours_id": "number"
   }
 ]
 ```
@@ -981,53 +980,42 @@ Authorization: Bearer <token>
 
 ---
 
-## 11. Quiz Routes
+## 11. Test & Test Question Routes
 
-### GET /quiz
-- **Description:** Get all quizzes
+### GET /quiz/test/course/:courseId
+- **Description:** Get the test (exam) and questions for a course
 - **Auth:** None
 - **Success:** 200 OK
 - **Response:**
 ```json
-[
-  {
-    "id": "number",
-    "titre": "string",
-    "cours_id": "number"
-  }
-]
-```
-
-### GET /quiz/course/:courseId
-- **Description:** Get all quizzes for a specific course (each quiz is a single question with 4 answer options)
-- **Auth:** None
-- **Success:** 200 OK
-- **Response:**
-```json
-[
-  {
-    "id": "number",
-    "titre": "string",        // Quiz title (e.g., "Python Test 1")
-    "cours_id": "number",
-    "question": "string",     // The actual question text
-    "options": {
-      "a": "string",
-      "b": "string",
-      "c": "string",
-      "d": "string"
+{
+  "id": "number",                // test (exam) id
+  "titre": "string",             // test title
+  "description": "string",
+  "cours_id": "number",
+  "questions": [
+    {
+      "id": "number",           // question id (use for submissions)
+      "question": "string",
+      "options": {
+        "a": "string",
+        "b": "string",
+        "c": "string",
+        "d": "string"
+      }
     }
-  }
-]
+  ]
+}
 ```
-- **Note:** Each "quiz" is a single question with 4 multiple-choice options. The correct answers are not included in the response for security reasons - they're only used server-side during quiz submission and scoring.
 
-### POST /quiz
-- **Description:** Create a new quiz with questions (only the teacher who owns the course can create quizzes for their courses)
-- **Auth:** Required (enseignant only - must own the course)
+### POST /quiz/test
+- **Description:** Create a test (teacher-only, one per course, with all questions)
+- **Auth:** enseignant only
 - **Body:**
 ```json
 {
   "titre": "string",
+  "description": "string",
   "cours_id": "number",
   "questions": [
     {
@@ -1036,7 +1024,7 @@ Authorization: Bearer <token>
       "option_b": "string",
       "option_c": "string",
       "option_d": "string",
-      "correct": "string (a|b|c|d)"
+      "answer": "string (a|b|c|d)"
     }
   ]
 }
@@ -1045,74 +1033,23 @@ Authorization: Bearer <token>
 - **Response:**
 ```json
 {
-  "message": "Quiz created with questions",
-  "quizId": "number",
+  "message": "Test created with questions",
+  "testId": "number",
   "questionsCount": "number"
 }
 ```
-- **Error:** 400 Bad Request if required fields are missing or question format is invalid
-- **Error:** 403 Forbidden if teacher doesn't own the course
-- **Error:** 404 Not Found if course doesn't exist
-- **Note:** All fields (titre, cours_id, questions) are required. Questions array must be non-empty. All questions are validated and created atomically with the quiz.
+- **Error:** 409 Conflict if test already exists for course
+- **Error:** 400 Bad Request if missing/invalid fields
 
-### DELETE /quiz/:id
-- **Description:** Delete a quiz (only the teacher who owns the course can delete quizzes from their courses)
-- **Auth:** Required (enseignant only - must own the course)
+### DELETE /quiz/test/:id
+- **Description:** Delete a test (teacher-only, will also delete its questions)
+- **Auth:** enseignant only
 - **Success:** 200 OK
 - **Response:**
 ```json
 {
-  "message": "Quiz supprimé"
+  "message": "Test deleted"
 }
-```
-- **Error:** 403 Forbidden if teacher doesn't own the course
-- **Error:** 404 Not Found if quiz doesn't exist
-
----
-
-## 12. Question Routes
-
-### POST /question
-- **Description:** Add a question to a quiz
-- **Auth:** Required (enseignant or admin)
-- **Body:**
-```json
-{
-  "quiz_id": "number",
-  "question": "string",
-  "option_a": "string",
-  "option_b": "string",
-  "option_c": "string",
-  "option_d": "string",
-  "correct": "string (a|b|c|d)"
-}
-```
-- **Success:** 200 OK
-- **Response:**
-```json
-{
-  "message": "Question ajoutée"
-}
-```
-
-### GET /question/:quizId
-- **Description:** Get all questions for a quiz
-- **Auth:** None
-- **Success:** 200 OK
-- **Response:**
-```json
-[
-  {
-    "id": "number",
-    "quiz_id": "number",
-    "question": "string",
-    "option_a": "string",
-    "option_b": "string",
-    "option_c": "string",
-    "option_d": "string",
-    "correct": "string"
-  }
-]
 ```
 
 ---

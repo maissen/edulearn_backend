@@ -115,34 +115,6 @@ CREATE TABLE IF NOT EXISTS test_results (
 
 -- ====================[ END TEST/QUESTIONS STRUCTURE ]========================
 
--- Forum posts table
-CREATE TABLE IF NOT EXISTS forum (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    titre VARCHAR(255) NOT NULL,
-    contenu TEXT NOT NULL,
-    user_id INT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
-    INDEX idx_user_id (user_id),
-    INDEX idx_created_at (created_at)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- Forum comments table
-CREATE TABLE IF NOT EXISTS comments (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    post_id INT NOT NULL,
-    user_id INT NOT NULL,
-    contenu TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (post_id) REFERENCES forum(id) ON DELETE CASCADE ON UPDATE CASCADE,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
-    INDEX idx_post_id (post_id),
-    INDEX idx_user_id (user_id),
-    INDEX idx_created_at (created_at)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
 -- Student Course Enrollments table
 CREATE TABLE IF NOT EXISTS student_enrollments (
     id INT AUTO_INCREMENT PRIMARY KEY,
