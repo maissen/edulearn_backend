@@ -19,7 +19,7 @@ router.post("/test", verifyToken, isTeacherOrAdmin, createTest);
 // Delete a test (teacher only)
 router.delete("/test/:id", verifyToken, isTeacherOrAdmin, deleteTest);
 
-// Student submits answers to a test
-router.post("/test/submit", verifyToken, isEtudiant, submitTest);
+// Note: The submit test route has been moved to app.js to make it accessible at /test/submit
+// router.post("/test/submit", verifyToken, isEtudiant, submitTest);
 
 export default router;
