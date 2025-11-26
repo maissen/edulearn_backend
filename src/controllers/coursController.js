@@ -105,28 +105,28 @@ export const getCourseContent = async (req, res) => {
 
     const course = courseRows[0];
 
-    // Get all quizzes for this course
-    const [quizRows] = await db.query("SELECT id, titre, cours_id FROM quiz WHERE cours_id = ?", [courseId]);
+    // Get all tests for this course (changed from 'quiz' to 'test')
+    const [testRows] = await db.query("SELECT id, titre, cours_id FROM test WHERE cours_id = ?", [courseId]);
 
-    // Get questions for all quizzes in this course
-    if (quizRows.length > 0) {
-      const quizIds = quizRows.map(quiz => quiz.id);
-      const placeholders = quizIds.map(() => '?').join(',');
+    // Get questions for all tests in this course (changed from 'questions' to 'test_questions')
+    if (testRows.length > 0) {
+      const testIds = testRows.map(test => test.id);
+      const placeholders = testIds.map(() => '?').join(',');
       const [questionRows] = await db.query(
-        `SELECT id, quiz_id, question, option_a, option_b, option_c, option_d
-         FROM questions
-         WHERE quiz_id IN (${placeholders})
-         ORDER BY quiz_id, id`,
-        quizIds
+        `SELECT id, test_id, question, option_a, option_b, option_c, option_d
+         FROM test_questions
+         WHERE test_id IN (${placeholders})
+         ORDER BY test_id, id`,
+        testIds
       );
 
-      // Group questions by quiz_id
-      const questionsByQuiz = {};
+      // Group questions by test_id
+      const questionsByTest = {};
       questionRows.forEach(question => {
-        if (!questionsByQuiz[question.quiz_id]) {
-          questionsByQuiz[question.quiz_id] = [];
+        if (!questionsByTest[question.test_id]) {
+          questionsByTest[question.test_id] = [];
         }
-        questionsByQuiz[question.quiz_id].push({
+        questionsByTest[question.test_id].push({
           id: question.id,
           question: question.question,
           options: {
@@ -140,8 +140,8 @@ export const getCourseContent = async (req, res) => {
 
       // Create a single test object containing all questions
       const allQuestions = [];
-      quizRows.forEach(quiz => {
-        const questions = questionsByQuiz[quiz.id] || [];
+      testRows.forEach(test => {
+        const questions = questionsByTest[test.id] || [];
         questions.forEach(question => {
           allQuestions.push({
             id: question.id,  // Include question ID for submissions
