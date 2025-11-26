@@ -75,6 +75,7 @@ export const getCoursesInProgress = async (req, res) => {
         c.titre,
         c.description,
         c.category,
+        c.youtube_vd_url,
         e.username as teacher_username
       FROM student_enrollments se
       JOIN cours c ON se.cours_id = c.id
@@ -105,6 +106,7 @@ export const getCompletedCourses = async (req, res) => {
         c.titre,
         c.description,
         c.category,
+        c.youtube_vd_url,
         e.username as teacher_username
       FROM student_enrollments se
       JOIN cours c ON se.cours_id = c.id

@@ -1,7 +1,7 @@
 import { db } from "../../config/db.js";
 
 export const getAllCours = async (req, res) => {
-  const [rows] = await db.query("SELECT id, titre, description, category, enseignant_id FROM cours");
+  const [rows] = await db.query("SELECT id, titre, description, category, youtube_vd_url, enseignant_id FROM cours");
   res.json(rows);
 };
 
@@ -44,6 +44,7 @@ export const getCoursesGroupedByCategory = async (req, res) => {
         c.titre,
         c.description,
         c.category,
+        c.youtube_vd_url,
         c.enseignant_id,
         e.username as teacher_username,
         e.email as teacher_email
@@ -76,7 +77,7 @@ export const getCoursesGroupedByCategory = async (req, res) => {
 };
 
 export const getCoursById = async (req, res) => {
-  const [rows] = await db.query("SELECT id, titre, description, category, enseignant_id FROM cours WHERE id = ?", [req.params.id]);
+  const [rows] = await db.query("SELECT id, titre, description, category, youtube_vd_url, enseignant_id FROM cours WHERE id = ?", [req.params.id]);
   res.json(rows[0]);
 };
 
@@ -91,6 +92,7 @@ export const getCourseContent = async (req, res) => {
         c.titre,
         c.description,
         c.category,
+        c.youtube_vd_url,
         c.enseignant_id,
         e.username as teacher_username,
         e.email as teacher_email
@@ -269,7 +271,7 @@ export const getRelatedCourses = async (req, res) => {
 
     // First, get the category of the current course
     const [currentCourse] = await db.query(
-      "SELECT category FROM cours WHERE id = ?",
+      "SELECT category, youtube_vd_url FROM cours WHERE id = ?",
       [courseId]
     );
 
@@ -303,22 +305,22 @@ export const getRelatedCourses = async (req, res) => {
 };
 
 export const createCours = async (req, res) => {
-  const { titre, description, category, enseignant_id } = req.body;
+  const { titre, description, category, youtube_vd_url, enseignant_id } = req.body;
 
   await db.query(
-    "INSERT INTO cours(titre, description, category, enseignant_id) VALUES (?, ?, ?, ?)",
-    [titre, description, category, enseignant_id]
+    "INSERT INTO cours(titre, description, category, youtube_vd_url, enseignant_id) VALUES (?, ?, ?, ?, ?)",
+    [titre, description, category, youtube_vd_url, enseignant_id]
   );
 
   res.json({ message: "Cours ajouté" });
 };
 
 export const updateCours = async (req, res) => {
-  const { titre, description, category } = req.body;
+  const { titre, description, category, youtube_vd_url } = req.body;
 
   await db.query(
-    "UPDATE cours SET titre = ?, description = ?, category = ? WHERE id = ?",
-    [titre, description, category, req.params.id]
+    "UPDATE cours SET titre = ?, description = ?, category = ?, youtube_vd_url = ? WHERE id = ?",
+    [titre, description, category, youtube_vd_url, req.params.id]
   );
 
   res.json({ message: "Cours modifié" });

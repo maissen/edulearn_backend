@@ -272,6 +272,7 @@ Authorization: Bearer <token>
   "titre": "string",
   "description": "string",
   "category": "string",
+  "youtube_vd_url": "string",
   "enseignant_id": "number",
   "imageUrl": "string",
   "duration": "string",
@@ -292,6 +293,7 @@ Authorization: Bearer <token>
   "titre": "string",
   "description": "string",
   "category": "string",
+  "youtube_vd_url": "string",
   "enseignant_id": "number",
   "teacher_username": "string",
   "teacher_email": "string",
@@ -362,6 +364,7 @@ Authorization: Bearer <token>
   "titre": "string",
   "description": "string",
   "category": "string",
+  "youtube_vd_url": "string",
   "enseignant_id": "number"
 }
 ```
@@ -381,7 +384,8 @@ Authorization: Bearer <token>
 {
   "titre": "string",
   "description": "string",
-  "category": "string"
+  "category": "string",
+  "youtube_vd_url": "string"
 }
 ```
 - **Success:** 200 OK
