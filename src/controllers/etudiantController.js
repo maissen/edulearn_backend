@@ -1,6 +1,6 @@
 import { db } from "../../config/db.js";
 import StudentEnrollment from "../models/StudentEnrollment.js";
-import QuizResult from "../models/QuizResult.js";
+import TestResult from "../models/QuizResult.js"; // unified test result model
 
 export const getAllEtudiants = async (req, res) => {
   const [rows] = await db.query("SELECT id, username, email, classe_id FROM etudiants");
@@ -187,15 +187,13 @@ export const checkCompletionStatus = async (req, res) => {
   }
 };
 
-export const getStudentQuizResults = async (req, res) => {
+export const getStudentTestResults = async (req, res) => {
   try {
-    const etudiantId = req.user.id; // From auth middleware
-
-    const quizResults = await QuizResult.getStudentQuizResults(etudiantId);
-
-    res.json(quizResults);
+    const etudiantId = req.user.id;
+    const testResults = await TestResult.getStudentTestResults(etudiantId);
+    res.json(testResults);
   } catch (error) {
-    console.error('Error fetching student quiz results:', error);
-    res.status(500).json({ error: 'Failed to fetch quiz results' });
+    console.error('Error fetching student test results:', error);
+    res.status(500).json({ error: 'Failed to fetch test results' });
   }
 };

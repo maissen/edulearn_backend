@@ -1,310 +1,102 @@
 import { db } from "../../config/db.js";
-import QuizResult from "../models/QuizResult.js";
-import TestResult from "../models/QuizResult.js"; // Now handles test submissions
+import TestResult from "../models/QuizResult.js"; // This model now handles all test result logic
 
-export const getAllQuiz = async (req, res) => {
-  const [rows] = await db.query("SELECT id, titre, cours_id FROM quiz");
-  res.json(rows);
-};
-
-export const getQuizByCourse = async (req, res) => {
+// Get test for a course, with all questions
+export const getTestByCourse = async (req, res) => {
   try {
-    // Get quizzes for the course
-    const [quizRows] = await db.query("SELECT id, titre, cours_id FROM quiz WHERE cours_id = ?", [req.params.courseId]);
-
-    if (quizRows.length === 0) {
-      return res.json([]);
+    const courseId = req.params.courseId;
+    // Get test for this course
+    const [testRows] = await db.query("SELECT id, titre, description, cours_id FROM test WHERE cours_id = ?", [courseId]);
+    if (testRows.length === 0) {
+      return res.json({});
     }
-
-    // Get questions for all quizzes in this course
-    const quizIds = quizRows.map(quiz => quiz.id);
-    const placeholders = quizIds.map(() => '?').join(',');
+    const test = testRows[0];
+    // Get questions for this test
     const [questionRows] = await db.query(
-      `SELECT id, quiz_id, question, option_a, option_b, option_c, option_d, correct
-       FROM questions
-       WHERE quiz_id IN (${placeholders})
-       ORDER BY quiz_id, id`,
-      quizIds
+      `SELECT id, test_id, question, option_a, option_b, option_c, option_d FROM test_questions WHERE test_id = ? ORDER BY id`,
+      [test.id]
     );
-
-    // Group questions by quiz_id
-    const questionsByQuiz = {};
-    questionRows.forEach(question => {
-      if (!questionsByQuiz[question.quiz_id]) {
-        questionsByQuiz[question.quiz_id] = [];
+    test.questions = questionRows.map(q => ({
+      id: q.id,
+      question: q.question,
+      options: {
+        a: q.option_a,
+        b: q.option_b,
+        c: q.option_c,
+        d: q.option_d
       }
-      questionsByQuiz[question.quiz_id].push({
-        id: question.id,
-        question: question.question,
-        options: {
-          a: question.option_a,
-          b: question.option_b,
-          c: question.option_c,
-          d: question.option_d
-        },
-        // Note: We're not exposing the correct answer for security reasons
-        // The correct answer will only be used server-side for scoring
-      });
-    });
-
-    // For this structure, each quiz represents a single question
-    // So we'll transform quizzes into direct question objects
-    const quizzesAsQuestions = quizRows.map(quiz => {
-      const questions = questionsByQuiz[quiz.id] || [];
-
-      // Since each quiz should have exactly one question,
-      // we'll take the first question or create a structure that treats the quiz title as the question
-      if (questions.length > 0) {
-        // Use the actual question from the database
-        const question = questions[0]; // Take the first (and presumably only) question
-        return {
-          id: quiz.id,
-          titre: quiz.titre, // This is like "Python Test 1", "Python Test 2", etc.
-          cours_id: quiz.cours_id,
-          question: question.question,
-          options: question.options
-        };
-      } else {
-        // Fallback if no questions found (though this shouldn't happen with proper data)
-        return {
-          id: quiz.id,
-          titre: quiz.titre,
-          cours_id: quiz.cours_id,
-          question: quiz.titre, // Use quiz title as fallback
-          options: { a: "", b: "", c: "", d: "" }
-        };
-      }
-    });
-
-    res.json(quizzesAsQuestions);
+    }));
+    res.json(test);
   } catch (error) {
-    console.error('Error fetching quizzes for course:', error);
-    res.status(500).json({ error: 'Failed to fetch quizzes for course' });
+    console.error('Error fetching test for course:', error);
+    res.status(500).json({ error: 'Failed to fetch test for course' });
   }
 };
 
-export const createQuiz = async (req, res) => {
+// Create a new test with questions for a course
+export const createTest = async (req, res) => {
+  const connection = await db.getConnection();
   try {
-    const { titre, cours_id, questions } = req.body;
-
-    // Validate required fields
-    if (!titre || !cours_id || !questions) {
-      return res.status(400).json({
-        error: "Missing required fields: titre, cours_id, and questions are required"
-      });
-    }
-
-    if (!Array.isArray(questions) || questions.length === 0) {
-      return res.status(400).json({
-        error: "Questions must be a non-empty array"
-      });
-    }
-
-    // Check if the course belongs to the authenticated teacher
-    const [courseRows] = await db.query(
-      "SELECT enseignant_id FROM cours WHERE id = ?",
-      [cours_id]
-    );
-
-    if (courseRows.length === 0) {
-      return res.status(404).json({ message: "Course not found" });
-    }
-
-    if (courseRows[0].enseignant_id !== req.user.id) {
-      return res.status(403).json({
-        message: "Access denied. You can only create quizzes for your own courses."
-      });
-    }
-
-    // Validate all questions before starting transaction
-    for (const question of questions) {
-      const { question: qText, option_a, option_b, option_c, option_d, correct } = question;
-
-      if (!qText || !option_a || !option_b || !option_c || !option_d || !correct) {
-        return res.status(400).json({
-          error: "Each question must have: question, option_a, option_b, option_c, option_d, and correct"
-        });
-      }
-
-      if (!['a', 'b', 'c', 'd'].includes(correct.toLowerCase())) {
-        return res.status(400).json({
-          error: "Correct answer must be 'a', 'b', 'c', or 'd'"
-        });
-      }
-    }
-
-    // Start transaction for atomic operation
-    const connection = await db.getConnection();
     await connection.beginTransaction();
-
-    try {
-      // Insert the quiz
-      const [quizResult] = await connection.query(
-        "INSERT INTO quiz(titre, cours_id) VALUES (?, ?)",
-        [titre, cours_id]
-      );
-
-      const quizId = quizResult.insertId;
-
-      // Create all questions
-      for (const question of questions) {
-        const { question: qText, option_a, option_b, option_c, option_d, correct } = question;
-
-        await connection.query(
-          `INSERT INTO questions(quiz_id, question, option_a, option_b, option_c, option_d, correct)
-           VALUES (?, ?, ?, ?, ?, ?, ?)`,
-          [quizId, qText, option_a, option_b, option_c, option_d, correct.toLowerCase()]
-        );
-      }
-
-      await connection.commit();
-
-      res.json({
-        message: "Quiz created with questions",
-        quizId: quizId,
-        questionsCount: questions.length
-      });
-
-    } catch (error) {
+    const { titre, description, cours_id, questions } = req.body;
+    if (!titre || !cours_id || !Array.isArray(questions) || questions.length === 0) {
       await connection.rollback();
-      throw error;
-    } finally {
-      connection.release();
+      return res.status(400).json({
+        message: "Invalid request: 'titre', 'cours_id', and non-empty 'questions' are required."
+      });
     }
-
-  } catch (err) {
-    console.error('Error creating quiz:', err);
-    res.status(500).json({ error: err.message });
-  }
-};
-
-export const deleteQuiz = async (req, res) => {
-  try {
-    // First, get the quiz and check if it exists, also get the course_id
-    const [quizRows] = await db.query(
-      "SELECT q.id, q.cours_id, c.enseignant_id FROM quiz q JOIN cours c ON q.cours_id = c.id WHERE q.id = ?",
-      [req.params.id]
+    // Validate that this course doesn't already have a test
+    const [testRows] = await connection.query("SELECT id FROM test WHERE cours_id = ?", [cours_id]);
+    if (testRows.length > 0) {
+      await connection.rollback();
+      return res.status(409).json({ message: "Test already exists for this course." });
+    }
+    // Insert test
+    const [testResult] = await connection.query(
+      "INSERT INTO test (titre, description, cours_id) VALUES (?, ?, ?)",
+      [titre, description || '', cours_id]
     );
-
-    if (quizRows.length === 0) {
-      return res.status(404).json({ message: "Quiz not found" });
-    }
-
-    const quiz = quizRows[0];
-
-    // Check if the authenticated teacher owns the course
-    if (quiz.enseignant_id !== req.user.id) {
-      return res.status(403).json({
-        message: "Access denied. You can only delete quizzes from your own courses."
-      });
-    }
-
-    // Delete the quiz
-    await db.query("DELETE FROM quiz WHERE id = ?", [req.params.id]);
-    res.json({ message: "Quiz supprimé" });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-};
-
-export const submitQuiz = async (req, res) => {
-  try {
-    const { submissions } = req.body;
-    const etudiantId = req.user.id;
-
-    // Support both single quiz and batch submissions
-    let submissionsArray = [];
-
-    if (submissions && Array.isArray(submissions)) {
-      // Batch submission
-      submissionsArray = submissions;
-    } else if (req.body.quizId && req.body.responses) {
-      // Single quiz submission (backward compatibility)
-      submissionsArray = [{
-        quizId: req.body.quizId,
-        responses: req.body.responses
-      }];
-    } else {
-      return res.status(400).json({
-        error: 'Invalid request. Either provide submissions array or quizId with responses.'
-      });
-    }
-
-    // Validate submissions
-    if (submissionsArray.length === 0) {
-      return res.status(400).json({
-        error: 'No submissions provided.'
-      });
-    }
-
-    // Process each submission
-    const results = [];
-    const errors = [];
-
-    for (let i = 0; i < submissionsArray.length; i++) {
-      const submission = submissionsArray[i];
-      const { quizId, responses } = submission;
-
-      try {
-        // Validate individual submission
-        if (!quizId || !responses || typeof responses !== 'object') {
-          errors.push({
-            index: i,
-            quizId: quizId,
-            error: 'Invalid submission format. quizId and responses are required.'
-          });
-          continue;
-        }
-
-        // Submit quiz and calculate score
-        const result = await QuizResult.submitQuiz(etudiantId, quizId, responses);
-        results.push({
-          quizId: quizId,
-          result: result
-        });
-
-      } catch (error) {
-        console.error(`Error submitting quiz ${quizId}:`, error);
-
-        let errorMessage = 'Failed to submit quiz';
-        if (error.message === 'Student has already submitted this quiz') {
-          errorMessage = error.message;
-        } else if (error.message === 'No questions found for this quiz') {
-          errorMessage = error.message;
-        }
-
-        errors.push({
-          index: i,
-          quizId: quizId,
-          error: errorMessage
-        });
+    const testId = testResult.insertId;
+    for (const q of questions) {
+      const { question, option_a, option_b, option_c, option_d, answer } = q;
+      if (!question || !option_a || !option_b || !option_c || !option_d || !answer) {
+        await connection.rollback();
+        return res.status(400).json({ message: "Each question must have 'question', 'option_a', 'option_b', 'option_c', 'option_d', and 'answer' fields." });
       }
+      if (!["a", "b", "c", "d"].includes(answer.toLowerCase())) {
+        await connection.rollback();
+        return res.status(400).json({ message: "Answer must be one of: a, b, c, d" });
+      }
+      await connection.query(
+        `INSERT INTO test_questions (test_id, question, option_a, option_b, option_c, option_d, answer)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [testId, question, option_a, option_b, option_c, option_d, answer.toLowerCase()]
+      );
     }
-
-    // Prepare response
-    const response = {
-      message: `Processed ${submissionsArray.length} quiz submission(s)`,
-      successful: results.length,
-      failed: errors.length,
-      results: results
-    };
-
-    if (errors.length > 0) {
-      response.errors = errors;
-    }
-
-    // Return appropriate status code
-    const statusCode = errors.length === 0 ? 200 :
-                      results.length > 0 ? 207 : 400; // 207 = Multi-Status
-
-    res.status(statusCode).json(response);
-
+    await connection.commit();
+    res.json({ message: "Test created with questions", testId, questionsCount: questions.length });
   } catch (error) {
-    console.error('Error processing quiz submissions:', error);
-    res.status(500).json({ error: 'Failed to process quiz submissions' });
+    await connection.rollback();
+    console.error('Error creating test:', error);
+    res.status(500).json({ error: 'Failed to create test' });
+  } finally {
+    connection.release();
   }
 };
 
+// Delete a test
+export const deleteTest = async (req, res) => {
+  try {
+    const testId = req.params.id;
+    // Delete test and cascade delete its questions (handled by FK)
+    await db.query("DELETE FROM test WHERE id = ?", [testId]);
+    res.json({ message: 'Test deleted' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Student submits answers to a test
 export const submitTest = async (req, res) => {
   try {
     const etudiantId = req.user.id;

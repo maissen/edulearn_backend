@@ -1,25 +1,25 @@
 import express from "express";
 import {
-  getAllQuiz,
-  getQuizByCourse,
-  createQuiz,
-  deleteQuiz,
-  submitQuiz,
-  submitTest
+  getTestByCourse,
+  createTest,
+  deleteTest,
+  submitTest,
 } from "../controllers/quizController.js";
-
 import { verifyToken } from "../middlewares/authMiddleware.js";
 import { isTeacherOrAdmin, isEtudiant } from "../middlewares/roleMiddleware.js";
 
 const router = express.Router();
 
-router.get("/", getAllQuiz);
-router.get("/course/:courseId", getQuizByCourse);
-router.post("/", verifyToken, isTeacherOrAdmin, createQuiz);
+// Get the test and questions for a course
+router.get("/test/course/:courseId", getTestByCourse);
 
-// New route: submit a full test (all quiz answers)
+// Create a new test for a course (teacher only)
+router.post("/test", verifyToken, isTeacherOrAdmin, createTest);
+
+// Delete a test (teacher only)
+router.delete("/test/:id", verifyToken, isTeacherOrAdmin, deleteTest);
+
+// Student submits answers to a test
 router.post("/test/submit", verifyToken, isEtudiant, submitTest);
-
-router.delete("/:id", verifyToken, isTeacherOrAdmin, deleteQuiz);
 
 export default router;
