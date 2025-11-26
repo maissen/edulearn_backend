@@ -4,7 +4,7 @@ import TestQuestion from "./Quiz.js"; // now represents test_questions
 export default class TestResult {
   // Submit a full test as a student
   static async submitTest(etudiantId, testID, submissions) {
-    const questions = await TestQuestion.findByTest(testID);
+    const questions = await TestQuestion.findByQuiz(testID);
     const answerMap = {};
     questions.forEach(q => {
       answerMap[q.id] = q.answer;
