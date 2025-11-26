@@ -424,19 +424,16 @@ INSERT IGNORE INTO etudiants (username, email, classe_id) VALUES
 
 -- ====================[ SAMPLE STUDENT ENROLLMENTS ]========================
 INSERT IGNORE INTO student_enrollments (etudiant_id, cours_id, status, progress_percentage) VALUES
--- Student 1 enrolled in several courses
 (1, 1, 'in_progress', 25.00),
 (1, 2, 'in_progress', 50.00),
 (1, 4, 'completed', 100.00),
 (1, 7, 'in_progress', 75.00),
 (1, 13, 'completed', 100.00),
--- Student 2 enrolled in several courses
 (2, 3, 'in_progress', 30.00),
 (2, 5, 'completed', 100.00),
 (2, 8, 'in_progress', 60.00),
 (2, 10, 'completed', 100.00),
 (2, 14, 'in_progress', 40.00),
--- Student 3 enrolled in several courses
 (3, 6, 'in_progress', 20.00),
 (3, 9, 'completed', 100.00),
 (3, 11, 'in_progress', 70.00),
@@ -445,13 +442,10 @@ INSERT IGNORE INTO student_enrollments (etudiant_id, cours_id, status, progress_
 
 -- ====================[ SAMPLE TEST RESULTS ]========================
 INSERT IGNORE INTO test_results (etudiant_id, test_id, score, total_questions, correct_answers, responses) VALUES
--- Student 1 test results
 (1, 4, 16.00, 5, 4, '[{\"quizId\": 16, \"answer\": \"a\"}, {\"quizId\": 17, \"answer\": \"b\"}, {\"quizId\": 18, \"answer\": \"d\"}, {\"quizId\": 19, \"answer\": \"a\"}, {\"quizId\": 20, \"answer\": \"c\"}]'),
 (1, 13, 18.00, 5, 5, '[{\"quizId\": 65, \"answer\": \"b\"}, {\"quizId\": 66, \"answer\": \"a\"}, {\"quizId\": 67, \"answer\": \"b\"}, {\"quizId\": 68, \"answer\": \"b\"}, {\"quizId\": 69, \"answer\": \"a\"}]'),
--- Student 2 test results
 (2, 5, 14.00, 5, 3, '[{\"quizId\": 21, \"answer\": \"a\"}, {\"quizId\": 22, \"answer\": \"d\"}, {\"quizId\": 23, \"answer\": \"a\"}, {\"quizId\": 24, \"answer\": \"c\"}, {\"quizId\": 25, \"answer\": \"a\"}]'),
 (2, 10, 20.00, 5, 5, '[{\"quizId\": 46, \"answer\": \"a\"}, {\"quizId\": 47, \"answer\": \"b\"}, {\"quizId\": 48, \"answer\": \"c\"}, {\"quizId\": 49, \"answer\": \"c\"}, {\"quizId\": 50, \"answer\": \"a\"}]'),
--- Student 3 test results
 (3, 9, 18.00, 5, 4, '[{\"quizId\": 41, \"answer\": \"a\"}, {\"quizId\": 42, \"answer\": \"a\"}, {\"quizId\": 43, \"answer\": \"a\"}, {\"quizId\": 44, \"answer\": \"a\"}, {\"quizId\": 45, \"answer\": \"a\"}]'),
 (3, 15, 16.00, 5, 4, '[{\"quizId\": 71, \"answer\": \"d\"}, {\"quizId\": 72, \"answer\": \"c\"}, {\"quizId\": 73, \"answer\": \"a\"}, {\"quizId\": 74, \"answer\": \"a\"}, {\"quizId\": 75, \"answer\": \"c\"}]');
 
