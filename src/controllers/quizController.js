@@ -1,5 +1,6 @@
 import { db } from "../../config/db.js";
 import QuizResult from "../models/QuizResult.js";
+import TestResult from "../models/QuizResult.js"; // Now handles test submissions
 
 export const getAllQuiz = async (req, res) => {
   const [rows] = await db.query("SELECT id, titre, cours_id FROM quiz");
@@ -301,5 +302,22 @@ export const submitQuiz = async (req, res) => {
   } catch (error) {
     console.error('Error processing quiz submissions:', error);
     res.status(500).json({ error: 'Failed to process quiz submissions' });
+  }
+};
+
+export const submitTest = async (req, res) => {
+  try {
+    const etudiantId = req.user.id;
+    const { testID, submissions } = req.body;
+    if (!testID || !Array.isArray(submissions) || submissions.length === 0) {
+      return res.status(400).json({ error: "testID and non-empty submissions are required" });
+    }
+    const result = await TestResult.submitTest(etudiantId, testID, submissions);
+    res.json({ message: "Submission successful", result });
+  } catch (error) {
+    if (error.message.includes("already submitted")) {
+      return res.status(409).json({ error: error.message });
+    }
+    res.status(500).json({ error: error.message });
   }
 };

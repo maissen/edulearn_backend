@@ -1,81 +1,50 @@
 import { db } from "../../config/db.js";
-import Question from "./Question.js";
+import Quiz from "./Quiz.js"; // Use new Quiz model
 
-export default class QuizResult {
-  // Submit quiz responses and calculate score
-  static async submitQuiz(etudiantId, quizId, studentResponses) {
-    // First, check if student has already submitted this quiz
-    const [existing] = await db.query(
-      "SELECT id FROM quiz_results WHERE etudiant_id = ? AND quiz_id = ?",
-      [etudiantId, quizId]
-    );
+export default class TestResult {
+  // Submit a full test as a student
+  static async submitTest(etudiantId, testID, submissions) {
+    // submissions: [{quizId, answer}]
+    const quizzes = await Quiz.findByTest(testID);
+    const answerMap = {};
+    quizzes.forEach(q => {
+      answerMap[q.id] = q.answer;
+    });
 
-    if (existing.length > 0) {
-      throw new Error('Student has already submitted this quiz');
-    }
-
-    // Get all questions for this quiz with correct answers
-    const questions = await Question.findByQuiz(quizId);
-
-    if (questions.length === 0) {
-      throw new Error('No questions found for this quiz');
-    }
-
-    // Calculate score
-    let correctAnswers = 0;
-    const totalQuestions = questions.length;
-    const maxScore = 20;
-    const pointsPerQuestion = maxScore / totalQuestions;
-
-    // Validate responses and count correct answers
-    const validatedResponses = {};
-
-    questions.forEach((question, index) => {
-      // Try different possible keys for the answer
-      let studentAnswer = studentResponses[question.id]; // Actual question ID
-
-      // If not found, try alternative formats that frontend might use
-      if (!studentAnswer) {
-        studentAnswer = studentResponses[`questionId${question.id}`]; // questionId1, questionId2, etc.
-      }
-      if (!studentAnswer) {
-        studentAnswer = studentResponses[`questionId${index + 1}`]; // questionId1, questionId2, etc. (by index)
-      }
-      if (!studentAnswer) {
-        studentAnswer = studentResponses[`${index + 1}`]; // "1", "2", "3", etc.
-      }
-
-      // Check if student provided an answer for this question
-      if (studentAnswer && ['a', 'b', 'c', 'd'].includes(studentAnswer.toLowerCase())) {
-        validatedResponses[question.id] = studentAnswer.toLowerCase();
-
-        // Check if answer is correct
-        if (studentAnswer.toLowerCase() === question.correct.toLowerCase()) {
-          correctAnswers++;
-        }
-      } else {
-        // Student didn't answer or provided invalid answer
-        validatedResponses[question.id] = null;
+    let correct = 0;
+    submissions.forEach(sub => {
+      if (
+        answerMap[sub.quizId] &&
+        answerMap[sub.quizId].toLowerCase() === sub.answer.toLowerCase()
+      ) {
+        correct++;
       }
     });
 
-    // Calculate final score
-    const score = Math.round((correctAnswers * pointsPerQuestion) * 100) / 100; // Round to 2 decimal places
+    const totalQuestions = quizzes.length;
+    const pointsPerQuestion = totalQuestions > 0 ? 20 / totalQuestions : 0;
+    const score = Math.round(correct * pointsPerQuestion * 100) / 100;
 
-    // Save result to database
-    const [result] = await db.query(
-      `INSERT INTO quiz_results(etudiant_id, quiz_id, score, total_questions, correct_answers, responses)
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      [etudiantId, quizId, score, totalQuestions, correctAnswers, JSON.stringify(validatedResponses)]
+    // Only one attempt per student per test
+    const [existingRows] = await db.query(
+      "SELECT id FROM test_results WHERE etudiant_id = ? AND test_id = ?",
+      [etudiantId, testID]
     );
+    if (existingRows.length > 0) {
+      throw new Error("Test already submitted by this student");
+    }
 
+    const [result] = await db.query(
+      "INSERT INTO test_results (etudiant_id, test_id, score, total_questions, correct_answers, responses) VALUES (?, ?, ?, ?, ?, ?)",
+      [etudiantId, testID, score, totalQuestions, correct, JSON.stringify(submissions)]
+    );
     return {
       id: result.insertId,
-      score: score,
-      totalQuestions: totalQuestions,
-      correctAnswers: correctAnswers,
-      maxScore: maxScore,
-      pointsPerQuestion: pointsPerQuestion
+      score,
+      totalQuestions,
+      correctAnswers: correct,
+      maxScore: 20,
+      pointsPerQuestion
     };
   }
 

@@ -1,20 +1,13 @@
 import { db } from "../../config/db.js";
 
 export default class Quiz {
-  static async findAll() {
-    const [rows] = await db.query("SELECT * FROM quiz");
+  // Fetch all quizzes/questions for a given test
+  static async findByTest(testId) {
+    const [rows] = await db.query(
+      `SELECT id, test_id, question, option_a, option_b, option_c, option_d, answer
+       FROM quiz WHERE test_id = ? ORDER BY id`,
+      [testId]
+    );
     return rows;
-  }
-
-  static async create(data) {
-    const { titre, cours_id } = data;
-    await db.query("INSERT INTO quiz(titre, cours_id) VALUES (?, ?)", [
-      titre,
-      cours_id
-    ]);
-  }
-
-  static async delete(id) {
-    await db.query("DELETE FROM quiz WHERE id = ?", [id]);
   }
 }

@@ -1239,3 +1239,79 @@ Authorization: Bearer <token>
 - **Enseignant (Teacher):** Can create/update/delete cours, examen, quiz, and questions
 - **Etudiant (Student):** Can view content and participate in forums
 
+# Test (Exam) Submission API
+
+## Submit All Test Quizzes (Exam Submission)
+
+### Endpoint
+POST /test/submit
+
+### Authentication
+- Student JWT token (Bearer ...)
+
+### Request Body
+
+```
+{
+  "testID": 1,
+  "submissions": [
+    { "quizId": 1, "answer": "a" },
+    { "quizId": 2, "answer": "b" },
+    { "quizId": 3, "answer": "d" }
+    // ...
+  ]
+}
+```
+
+- `testID`: ID of the test/exam.
+- `submissions[]`: Array, one object per quiz/question.
+  - `quizId`: ID of the quiz/question (from /test/:id or course content APIs)
+  - `answer`: One of "a", "b", "c", or "d" (selected answer).
+
+### Response
+
+Success:
+```
+{
+  "message": "Submission successful",
+  "result": {
+    "id": 456,
+    "score": 16.00,
+    "totalQuestions": 5,
+    "correctAnswers": 4,
+    "maxScore": 20,
+    "pointsPerQuestion": 4.00
+  }
+}
+```
+
+If already submitted:
+```
+{
+  "error": "Test already submitted by this student"
+}
+```
+If malformed:
+```
+{ "error": "testID and non-empty submissions are required" }
+```
+
+### Scoring
+- Maximum score: 20
+- Each correct answer: `20 / totalQuestions`
+- score = correctAnswers * pointsPerQuestion
+
+---
+
+## Table Structure (SQL Reference)
+
+- `test` table: links to course, identifies an exam
+- `quiz` table: each test contains quizzes/questions with (question, 4 options, correct answer)
+- `test_results` table: log student submissions and scores
+
+(See current schema/migrations in init.sql)
+
+---
+
+**Note:** The old per-quiz submission is now deprecated. Use /test/submit to submit answers to the entire test in one request.
+
