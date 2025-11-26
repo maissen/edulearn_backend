@@ -25,4 +25,10 @@ export default class Etudiant {
   static async delete(id) {
     await db.query("DELETE FROM etudiants WHERE id = ?", [id]);
   }
+
+  // Add method to find student by email
+  static async findByEmail(email) {
+    const [rows] = await db.query("SELECT * FROM etudiants WHERE email = ?", [email]);
+    return rows[0];
+  }
 }

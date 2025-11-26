@@ -1,5 +1,6 @@
 import { db } from "../../config/db.js";
 import TestResult from "../models/QuizResult.js"; // This model now handles all test result logic
+import Etudiant from "../models/Etudiant.js"; // Import Etudiant model to get student ID
 
 // Get test for a course, with all questions
 export const getTestByCourse = async (req, res) => {
@@ -99,17 +100,35 @@ export const deleteTest = async (req, res) => {
 // Student submits answers to a test
 export const submitTest = async (req, res) => {
   try {
-    const etudiantId = req.user.id;
+    // Get the user ID and email from the JWT token
+    const userId = req.user.id;
+    const userEmail = req.user.email;
+    
+    console.log(`Processing test submission for user ID: ${userId}, email: ${userEmail}`);
+    
+    // Look up the student ID using the email (email is unique and should match between users and etudiants tables)
+    const student = await Etudiant.findByEmail(userEmail);
+    if (!student) {
+      console.error(`Student not found for email: ${userEmail}, userId: ${userId}`);
+      return res.status(400).json({ error: `Student record not found for email: ${userEmail}` });
+    }
+    
+    console.log(`Found student ID: ${student.id} for email: ${userEmail}`);
+    
+    const etudiantId = student.id;
     const { testID, submissions } = req.body;
+    
     if (!testID || !Array.isArray(submissions) || submissions.length === 0) {
       return res.status(400).json({ error: "testID and non-empty submissions are required" });
     }
+    
     const result = await TestResult.submitTest(etudiantId, testID, submissions);
     res.json({ message: "Submission successful", result });
   } catch (error) {
     if (error.message.includes("already submitted")) {
       return res.status(409).json({ error: error.message });
     }
+    console.error('Error submitting test:', error);
     res.status(500).json({ error: error.message });
   }
 };
