@@ -31,7 +31,7 @@ export default class StudentEnrollment {
   static async completeCourse(etudiantId, coursId) {
     // Check if enrollment exists and is in progress
     const [existing] = await db.query(
-      "SELECT id, status FROM student_enrollments WHERE etudiant_id = ? AND cours_id = ?",
+      "SELECT id, status, progress_percentage FROM student_enrollments WHERE etudiant_id = ? AND cours_id = ?",
       [etudiantId, coursId]
     );
 
@@ -43,13 +43,22 @@ export default class StudentEnrollment {
       throw new Error('Course is already completed');
     }
 
-    // Update enrollment to completed
+    // Get the progress percentage to store in finished_courses
+    const progressPercentage = existing[0].progress_percentage;
+
+    // Delete from student_enrollments
     await db.query(
-      "UPDATE student_enrollments SET status = 'completed', progress_percentage = 100.00, completed_at = NOW() WHERE etudiant_id = ? AND cours_id = ?",
+      "DELETE FROM student_enrollments WHERE etudiant_id = ? AND cours_id = ?",
       [etudiantId, coursId]
     );
 
-    return { message: 'Course marked as completed successfully' };
+    // Insert into finished_courses with the final grade based on progress
+    await db.query(
+      "INSERT INTO finished_courses (etudiant_id, cours_id, final_grade) VALUES (?, ?, ?)",
+      [etudiantId, coursId, progressPercentage]
+    );
+
+    return { message: 'Course marked as completed successfully and moved to finished courses' };
   }
 
   // Get all enrollments for a student

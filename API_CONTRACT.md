@@ -644,7 +644,7 @@ Authorization: Bearer <token>
 - **Auth:** Required (etudiant or admin)
 - **Success:** 200 OK
 - **Response:**
-```json
+``json
 {
   "coursesInProgress": "number",
   "completedCourses": "number",
@@ -772,7 +772,7 @@ Authorization: Bearer <token>
 - **Response:**
 ```json
 {
-  "message": "Course marked as completed successfully"
+  "message": "Course marked as completed successfully and moved to finished courses"
 }
 ```
 - **Error:** 400 Bad Request if student not enrolled in course or course already completed
@@ -806,11 +806,10 @@ Authorization: Bearer <token>
 ```json
 [
   {
-    "enrollment_id": "number",
-    "progress_percentage": "number",
-    "started_at": "string",
+    "finished_course_id": "number",
+    "final_grade": "number",
     "completed_at": "string",
-    "updated_at": "string",
+    "created_at": "string",
     "id": "number",
     "titre": "string",
     "description": "string",
@@ -850,7 +849,8 @@ Authorization: Bearer <token>
 {
   "isEnrolled": "boolean",
   "status": "string", // "in_progress" or "completed" or null
-  "enrollmentId": "number", // null if not enrolled
+  "enrollmentId": "number", // null if not enrolled or completed
+  "finishedCourseId": "number", // null if not completed
   "progressPercentage": "number",
   "startedAt": "string", // ISO date string or null
   "completedAt": "string" // ISO date string or null
@@ -865,7 +865,7 @@ Authorization: Bearer <token>
 ```json
 {
   "hasCompleted": "boolean",
-  "enrollmentId": "number", // null if not completed
+  "finishedCourseId": "number", // null if not completed
   "completedAt": "string" // ISO date string or null
 }
 ```

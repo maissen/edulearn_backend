@@ -97,22 +97,21 @@ export const getCompletedCourses = async (req, res) => {
 
     const [rows] = await db.query(`
       SELECT
-        se.id as enrollment_id,
-        se.progress_percentage,
-        se.started_at,
-        se.completed_at,
-        se.updated_at,
+        fc.id as finished_course_id,
+        fc.completed_at,
+        fc.final_grade,
+        fc.created_at,
         c.id,
         c.titre,
         c.description,
         c.category,
         c.youtube_vd_url,
         e.username as teacher_username
-      FROM student_enrollments se
-      JOIN cours c ON se.cours_id = c.id
+      FROM finished_courses fc
+      JOIN cours c ON fc.cours_id = c.id
       JOIN enseignants e ON c.enseignant_id = e.id
-      WHERE se.etudiant_id = ? AND se.status = 'completed'
-      ORDER BY se.completed_at DESC
+      WHERE fc.etudiant_id = ?
+      ORDER BY fc.completed_at DESC
     `, [etudiantId]);
 
     res.json(rows);
@@ -127,6 +126,29 @@ export const checkEnrollmentStatus = async (req, res) => {
     const etudiantId = req.user.id; // From auth middleware
     const { courseId } = req.params;
 
+    // First check if the course is in finished_courses
+    const [finished] = await db.query(`
+      SELECT
+        fc.id as finished_course_id,
+        fc.completed_at
+      FROM finished_courses fc
+      WHERE fc.etudiant_id = ? AND fc.cours_id = ?
+    `, [etudiantId, courseId]);
+
+    if (finished.length > 0) {
+      // Course is finished, not just enrolled
+      return res.json({
+        isEnrolled: false,
+        status: 'completed',
+        enrollmentId: null,
+        finishedCourseId: finished[0].finished_course_id,
+        progressPercentage: finished[0].final_grade,
+        startedAt: null,
+        completedAt: finished[0].completed_at
+      });
+    }
+
+    // Check if the course is in student_enrollments
     const [rows] = await db.query(`
       SELECT
         se.id as enrollment_id,
@@ -143,6 +165,7 @@ export const checkEnrollmentStatus = async (req, res) => {
         isEnrolled: false,
         status: null,
         enrollmentId: null,
+        finishedCourseId: null,
         progressPercentage: 0,
         startedAt: null,
         completedAt: null
@@ -154,6 +177,7 @@ export const checkEnrollmentStatus = async (req, res) => {
       isEnrolled: true,
       status: enrollment.status,
       enrollmentId: enrollment.enrollment_id,
+      finishedCourseId: null,
       progressPercentage: enrollment.progress_percentage,
       startedAt: enrollment.started_at,
       completedAt: enrollment.completed_at
@@ -171,16 +195,15 @@ export const checkCompletionStatus = async (req, res) => {
 
     const [rows] = await db.query(`
       SELECT
-        se.id as enrollment_id,
-        se.status,
-        se.completed_at
-      FROM student_enrollments se
-      WHERE se.etudiant_id = ? AND se.cours_id = ? AND se.status = 'completed'
+        fc.id as finished_course_id,
+        fc.completed_at
+      FROM finished_courses fc
+      WHERE fc.etudiant_id = ? AND fc.cours_id = ?
     `, [etudiantId, courseId]);
 
     res.json({
       hasCompleted: rows.length > 0,
-      enrollmentId: rows.length > 0 ? rows[0].enrollment_id : null,
+      finishedCourseId: rows.length > 0 ? rows[0].finished_course_id : null,
       completedAt: rows.length > 0 ? rows[0].completed_at : null
     });
   } catch (error) {
