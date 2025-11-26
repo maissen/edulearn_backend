@@ -109,6 +109,7 @@ export const getCourseContent = async (req, res) => {
     let hasTakenTest = false;
     let studentScore = null;
     let totalScore = null;
+    // Check if user is authenticated and has 'etudiant' role
     if (req.user && req.user.role === 'etudiant') {
       try {
         // First, get the student ID using the email from the token
@@ -140,6 +141,38 @@ export const getCourseContent = async (req, res) => {
               studentScore = resultRows[0].score;
               totalScore = 20; // Tests are scored out of 20
             }
+          }
+        }
+      } catch (error) {
+        console.error('Error checking test completion status:', error);
+        // Don't fail the request if we can't determine test status
+      }
+    }
+    // Also check if an authenticated teacher/admin is viewing a student's test results
+    // This would require passing a student ID as a query parameter
+    else if (req.user && (req.user.role === 'enseignant' || req.user.role === 'admin') && req.query.studentId) {
+      try {
+        const studentId = req.query.studentId;
+        
+        // Check if there's a test for this course
+        const [testRows] = await db.query(
+          "SELECT id FROM test WHERE cours_id = ?",
+          [courseId]
+        );
+        
+        if (testRows.length > 0) {
+          const testId = testRows[0].id;
+          
+          // Check if student has taken this test and get their score
+          const [resultRows] = await db.query(
+            "SELECT score, total_questions FROM test_results WHERE etudiant_id = ? AND test_id = ?",
+            [studentId, testId]
+          );
+          
+          if (resultRows.length > 0) {
+            hasTakenTest = true;
+            studentScore = resultRows[0].score;
+            totalScore = 20; // Tests are scored out of 20
           }
         }
       } catch (error) {
