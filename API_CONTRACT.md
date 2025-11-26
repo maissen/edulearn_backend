@@ -814,22 +814,6 @@ Authorization: Bearer <token>
 ]
 ```
 
-### GET /etudiant/is-enrolled/:courseId
-- **Description:** Check if the authenticated student is enrolled in a specific course
-- **Auth:** Required (etudiant only)
-- **Success:** 200 OK
-- **Response:**
-```json
-{
-  "isEnrolled": "boolean",
-  "status": "string", // "in_progress" or "completed" or null
-  "enrollmentId": "number", // null if not enrolled
-  "progressPercentage": "number",
-  "startedAt": "string", // ISO date string or null
-  "completedAt": "string" // ISO date string or null
-}
-```
-
 ### GET /etudiant/has-completed/:courseId
 - **Description:** Check if the authenticated student has completed a specific course
 - **Auth:** Required (etudiant only)
@@ -840,6 +824,30 @@ Authorization: Bearer <token>
   "hasCompleted": "boolean",
   "enrollmentId": "number", // null if not completed
   "completedAt": "string" // ISO date string or null
+}
+```
+
+### GET /etudiant/test-result/:testId
+- **Description:** Check if a student has taken a test and get their score if they have
+- **Auth:** Required (etudiant only)
+- **Success:** 200 OK
+- **Response (if student took the test):**
+```json
+{
+  "hasTakenTest": true,
+  "hasPassed": "boolean",
+  "score": "number",
+  "totalScore": 20,
+  "correctAnswers": "number",
+  "totalQuestions": "number",
+  "submittedAt": "string"
+}
+```
+- **Response (if student hasn't taken the test):**
+```json
+{
+  "hasTakenTest": false,
+  "message": "Student has not taken this test"
 }
 ```
 

@@ -10,7 +10,8 @@ import {
   getCompletedCourses,
   checkEnrollmentStatus,
   checkCompletionStatus,
-  getStudentTestResults
+  getStudentTestResults,
+  checkTestResult
 } from "../controllers/etudiantController.js";
 
 import { verifyToken } from "../middlewares/authMiddleware.js";
@@ -29,6 +30,7 @@ router.get("/courses/completed", verifyToken, isEtudiant, getCompletedCourses);
 router.get("/test-results", verifyToken, isEtudiant, getStudentTestResults);
 router.get("/is-enrolled/:courseId", verifyToken, isEtudiant, checkEnrollmentStatus);
 router.get("/has-completed/:courseId", verifyToken, isEtudiant, checkCompletionStatus);
+router.get("/test-result/:testId", verifyToken, isEtudiant, checkTestResult);
 router.post("/start-course", verifyToken, isEtudiant, startCourse);
 router.post("/complete-course", verifyToken, isEtudiant, completeCourse);
 

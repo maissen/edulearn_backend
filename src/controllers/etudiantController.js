@@ -197,3 +197,36 @@ export const getStudentTestResults = async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch test results' });
   }
 };
+
+export const checkTestResult = async (req, res) => {
+  try {
+    const etudiantId = req.user.id;
+    const { testId } = req.params;
+
+    // Get the test result for this student and test
+    const testResult = await TestResult.getResultByStudentAndTest(etudiantId, testId);
+
+    if (!testResult) {
+      return res.json({
+        hasTakenTest: false,
+        message: "Student has not taken this test"
+      });
+    }
+
+    // Calculate if student passed (assuming passing score is 10 out of 20)
+    const hasPassed = testResult.score >= 10;
+
+    res.json({
+      hasTakenTest: true,
+      hasPassed: hasPassed,
+      score: testResult.score,
+      totalScore: 20, // Max score is always 20
+      correctAnswers: testResult.correct_answers,
+      totalQuestions: testResult.total_questions,
+      submittedAt: testResult.submitted_at
+    });
+  } catch (error) {
+    console.error('Error checking test result:', error);
+    res.status(500).json({ error: 'Failed to check test result' });
+  }
+};
