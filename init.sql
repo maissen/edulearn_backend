@@ -65,63 +65,55 @@ CREATE TABLE IF NOT EXISTS cours (
     INDEX idx_category (category)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Quizzes table
-CREATE TABLE IF NOT EXISTS quiz (
+-- ====================[ TEST AND TEST QUESTIONS STRUCTURE ]========================
+
+-- Table: test (exam or assessment per course)
+CREATE TABLE IF NOT EXISTS test (
     id INT AUTO_INCREMENT PRIMARY KEY,
     titre VARCHAR(255) NOT NULL,
+    description TEXT,
     cours_id INT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (cours_id) REFERENCES cours(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    UNIQUE KEY unique_cours_id (cours_id), -- Each course can have only one test
     INDEX idx_cours_id (cours_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Questions table
-CREATE TABLE IF NOT EXISTS questions (
+-- Table: test_questions (each is a question in a test)
+CREATE TABLE IF NOT EXISTS test_questions (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    quiz_id INT NOT NULL,
+    test_id INT NOT NULL,
     question TEXT NOT NULL,
     option_a VARCHAR(500) NOT NULL,
     option_b VARCHAR(500) NOT NULL,
     option_c VARCHAR(500) NOT NULL,
     option_d VARCHAR(500) NOT NULL,
-    correct ENUM('a', 'b', 'c', 'd') NOT NULL,
+    answer ENUM('a','b','c','d') NOT NULL, -- correct answer
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (quiz_id) REFERENCES quiz(id) ON DELETE CASCADE ON UPDATE CASCADE,
-    INDEX idx_quiz_id (quiz_id)
+    FOREIGN KEY (test_id) REFERENCES test(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    INDEX idx_test_id (test_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Quiz Results table
-CREATE TABLE IF NOT EXISTS quiz_results (
+-- Table: test_results (to record student scores for a test)
+CREATE TABLE IF NOT EXISTS test_results (
     id INT AUTO_INCREMENT PRIMARY KEY,
     etudiant_id INT NOT NULL,
-    quiz_id INT NOT NULL,
-    score DECIMAL(5,2) NOT NULL, -- Score out of 20
+    test_id INT NOT NULL,
+    score DECIMAL(5,2) NOT NULL,
     total_questions INT NOT NULL,
     correct_answers INT NOT NULL,
-    responses JSON, -- Store student's answers as JSON
+    responses JSON, -- Student's answer selections, e.g. [{quizId, answer}]
     submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (etudiant_id) REFERENCES etudiants(id) ON DELETE CASCADE ON UPDATE CASCADE,
-    FOREIGN KEY (quiz_id) REFERENCES quiz(id) ON DELETE CASCADE ON UPDATE CASCADE,
-    UNIQUE KEY unique_quiz_attempt (etudiant_id, quiz_id), -- One attempt per student per quiz
+    FOREIGN KEY (test_id) REFERENCES test(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    UNIQUE KEY unique_test_submission (etudiant_id, test_id),
     INDEX idx_etudiant_id (etudiant_id),
-    INDEX idx_quiz_id (quiz_id),
-    INDEX idx_submitted_at (submitted_at)
+    INDEX idx_test_id (test_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Exams (Examens) table
-CREATE TABLE IF NOT EXISTS examens (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    titre VARCHAR(255) NOT NULL,
-    classe_id INT NOT NULL,
-    date DATETIME NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (classe_id) REFERENCES classes(id) ON DELETE CASCADE ON UPDATE CASCADE,
-    INDEX idx_classe_id (classe_id),
-    INDEX idx_date (date)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+-- ====================[ END TEST/QUESTIONS STRUCTURE ]========================
 
 -- Forum posts table
 CREATE TABLE IF NOT EXISTS forum (
@@ -177,53 +169,4 @@ CREATE TABLE IF NOT EXISTS images (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_created_at (created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- ====================[ NEW TEST AND QUIZ STRUCTURE ]========================
-
--- Table: test (exam or assessment per course)
-CREATE TABLE IF NOT EXISTS test (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    titre VARCHAR(255) NOT NULL,
-    description TEXT,
-    cours_id INT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (cours_id) REFERENCES cours(id) ON DELETE CASCADE ON UPDATE CASCADE,
-    INDEX idx_cours_id (cours_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- Table: quiz (each is a question in a test)
-CREATE TABLE IF NOT EXISTS quiz (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    test_id INT NOT NULL,
-    question TEXT NOT NULL,
-    option_a VARCHAR(500) NOT NULL,
-    option_b VARCHAR(500) NOT NULL,
-    option_c VARCHAR(500) NOT NULL,
-    option_d VARCHAR(500) NOT NULL,
-    answer ENUM('a','b','c','d') NOT NULL, -- correct answer
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (test_id) REFERENCES test(id) ON DELETE CASCADE ON UPDATE CASCADE,
-    INDEX idx_test_id (test_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- Table: test_results (to record student scores for a test)
-CREATE TABLE IF NOT EXISTS test_results (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    etudiant_id INT NOT NULL,
-    test_id INT NOT NULL,
-    score DECIMAL(5,2) NOT NULL,
-    total_questions INT NOT NULL,
-    correct_answers INT NOT NULL,
-    responses JSON, -- Student's answer selections, e.g. [{quizId, answer}]
-    submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (etudiant_id) REFERENCES etudiants(id) ON DELETE CASCADE ON UPDATE CASCADE,
-    FOREIGN KEY (test_id) REFERENCES test(id) ON DELETE CASCADE ON UPDATE CASCADE,
-    UNIQUE KEY unique_test_submission (etudiant_id, test_id),
-    INDEX idx_etudiant_id (etudiant_id),
-    INDEX idx_test_id (test_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- ====================[ END NEW TEST/QUIZ STRUCTURE ]========================
 
