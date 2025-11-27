@@ -303,7 +303,7 @@ Authorization: Bearer <token>
 ```
 
 ### GET /cours/:id/content
-- **Description:** Get complete course content including course details and all quizzes as a single test object
+- **Description:** Get complete course content including course details and all questions as a single test object
 - **Auth:** None
 - **Success:** 200 OK
 - **Response:**
@@ -320,7 +320,7 @@ Authorization: Bearer <token>
   "test": {
     "id": "number",                // test (exam) id
     "cours_id": "number",
-    "titre": "string",             // test title
+    "titre": "string",             // test title (generated as "{Category} questions test")
     "questions": [
       {
         "id": "number",           // question id (use for submissions)
@@ -335,12 +335,17 @@ Authorization: Bearer <token>
     ],
     "hasTakenTest": "boolean",     // whether the authenticated student has taken the test
     "studentScore": "number|null", // student's score if test was taken, null otherwise
-    "totalScore": "number|null"    // total possible score (20), null if test not taken
+    "totalScore": "number|null",   // total possible score (20), null if test not taken
+    "hasStartedCourse": "boolean", // whether the authenticated student has started the course
+    "hasFinishedCourse": "boolean", // whether the authenticated student has finished the course
+    "finishedCourseId": "number|null", // ID of finished course record, null if not finished
+    "finishedAt": "string|null",   // ISO date when course was finished, null if not finished
+    "finalGrade": "number|null"    // Final grade for the course, null if not finished
   }
 }
 ```
 - **Error:** 404 Not Found if course doesn't exist
-- **Note:** All quizzes for the course are combined into a single test object. The test title is generated as "{Category} quizzes test". The `hasTakenTest`, `studentScore`, and `totalScore` fields are only populated when a student is authenticated and has taken the test.
+- **Note:** All questions for the course are combined into a single test object. The test title is generated as "{Category} questions test". The `hasTakenTest`, `studentScore`, and `totalScore` fields are only populated when a student is authenticated and has taken the test. The `hasStartedCourse`, `hasFinishedCourse`, `finishedCourseId`, `finishedAt`, and `finalGrade` fields are only populated when a student is authenticated and has started/finished the course.
 
 ### GET /cours/:id/related
 - **Description:** Get related courses for recommendations
@@ -1187,7 +1192,7 @@ If malformed:
 ## Table Structure (SQL Reference)
 
 - `test` table: links to course, identifies an exam
-- `quiz` table: each test contains quizzes/questions with (question, 4 options, correct answer)
+- `quiz` table: each test contains questions with (question, 4 options, correct answer)
 - `test_results` table: log student submissions and scores
 
 (See current schema/migrations in init.sql)

@@ -111,6 +111,14 @@ export const getCourseContent = async (req, res) => {
     let hasTakenTest = false;
     let studentScore = null;
     let totalScore = null;
+    
+    // Check if student has finished the course
+    let hasFinishedCourse = false;
+    let hasStartedCourse = false; // New attribute
+    let finishedCourseId = null;
+    let finishedAt = null;
+    let finalGrade = null;
+    
     // Check if user is authenticated and has 'etudiant' role
     if (req.user && req.user.role === 'etudiant') {
       try {
@@ -122,6 +130,29 @@ export const getCourseContent = async (req, res) => {
         
         if (studentRows.length > 0) {
           const studentId = studentRows[0].id;
+          
+          // Check if student has started this course
+          const [enrollmentRows] = await db.query(
+            "SELECT id, status FROM student_enrollments WHERE etudiant_id = ? AND cours_id = ?",
+            [studentId, courseId]
+          );
+          
+          if (enrollmentRows.length > 0) {
+            hasStartedCourse = true;
+          }
+          
+          // Check if student has finished this course
+          const [finishedRows] = await db.query(
+            "SELECT id, completed_at, final_grade FROM finished_courses WHERE etudiant_id = ? AND cours_id = ?",
+            [studentId, courseId]
+          );
+          
+          if (finishedRows.length > 0) {
+            hasFinishedCourse = true;
+            finishedCourseId = finishedRows[0].id;
+            finishedAt = finishedRows[0].completed_at;
+            finalGrade = finishedRows[0].final_grade;
+          }
           
           // Check if there's a test for this course
           const [testRows] = await db.query(
@@ -155,6 +186,29 @@ export const getCourseContent = async (req, res) => {
     else if (req.user && (req.user.role === 'enseignant' || req.user.role === 'admin') && req.query.studentId) {
       try {
         const studentId = req.query.studentId;
+        
+        // Check if student has started this course
+        const [enrollmentRows] = await db.query(
+          "SELECT id, status FROM student_enrollments WHERE etudiant_id = ? AND cours_id = ?",
+          [studentId, courseId]
+        );
+        
+        if (enrollmentRows.length > 0) {
+          hasStartedCourse = true;
+        }
+        
+        // Check if student has finished this course
+        const [finishedRows] = await db.query(
+          "SELECT id, completed_at, final_grade FROM finished_courses WHERE etudiant_id = ? AND cours_id = ?",
+          [studentId, courseId]
+        );
+        
+        if (finishedRows.length > 0) {
+          hasFinishedCourse = true;
+          finishedCourseId = finishedRows[0].id;
+          finishedAt = finishedRows[0].completed_at;
+          finalGrade = finishedRows[0].final_grade;
+        }
         
         // Check if there's a test for this course
         const [testRows] = await db.query(
@@ -231,28 +285,40 @@ export const getCourseContent = async (req, res) => {
 
       // Create test object with course info
       course.test = {
-        title: `${course.category} quizzes test`,
+        title: `${course.category} questions test`,
         id: course.id,
         cours_id: course.id,
-        quizzes: allQuestions
+        questions: allQuestions
       };
 
       // Add test result fields
       course.test.hasTakenTest = hasTakenTest;
       course.test.studentScore = studentScore;
       course.test.totalScore = totalScore;
+      
+      // Add course completion fields
+      course.test.hasStartedCourse = hasStartedCourse;
+      course.test.hasFinishedCourse = hasFinishedCourse;
+      course.test.finishedCourseId = finishedCourseId;
+      course.test.finishedAt = finishedAt;
+      course.test.finalGrade = finalGrade;
 
       // Remove the old quizzes field
       delete course.quizzes;
     } else {
       course.test = {
-        title: `${course.category} quizzes test`,
+        title: `${course.category} questions test`,
         id: course.id,
         cours_id: course.id,
-        quizzes: [],
+        questions: [],
         hasTakenTest: hasTakenTest,
         studentScore: studentScore,
-        totalScore: totalScore
+        totalScore: totalScore,
+        hasStartedCourse: false,
+        hasFinishedCourse: false,
+        finishedCourseId: null,
+        finishedAt: null,
+        finalGrade: null
       };
     }
 
