@@ -53,8 +53,70 @@ export const getProfile = async (req, res) => {
           coursesCompleted: 0
         };
       }
-    } else {
-      // For non-students, set course counts to 0
+    } 
+    // If user is a teacher, get teacher-specific statistics
+    else if (profile.role === 'enseignant') {
+      try {
+        // Get total number of created courses
+        const [coursesCountResult] = await db.query(`
+          SELECT COUNT(*) as count FROM cours
+          WHERE enseignant_id = ?
+        `, [req.user.id]);
+
+        // Get all students enrolled in all courses of this teacher
+        const [studentsCountResult] = await db.query(`
+          SELECT COUNT(DISTINCT se.etudiant_id) as count 
+          FROM student_enrollments se
+          JOIN cours c ON se.cours_id = c.id
+          WHERE c.enseignant_id = ?
+        `, [req.user.id]);
+
+        // Get average score of all tests of this teacher
+        const [avgScoreResult] = await db.query(`
+          SELECT AVG(tr.score) as avgScore
+          FROM test_results tr
+          JOIN test t ON tr.test_id = t.id
+          JOIN cours c ON t.cours_id = c.id
+          WHERE c.enseignant_id = ?
+        `, [req.user.id]);
+
+        // Get list of courses created by this teacher with all details
+        const [coursesResult] = await db.query(`
+          SELECT 
+            c.id,
+            c.titre,
+            c.description,
+            c.category,
+            c.youtube_vd_url,
+            c.created_at,
+            c.updated_at,
+            COUNT(se.id) as enrolled_students
+          FROM cours c
+          LEFT JOIN student_enrollments se ON c.id = se.cours_id
+          WHERE c.enseignant_id = ?
+          GROUP BY c.id, c.titre, c.description, c.category, c.youtube_vd_url, c.created_at, c.updated_at
+          ORDER BY c.created_at DESC
+        `, [req.user.id]);
+
+        courseStats = {
+          totalCoursesCreated: coursesCountResult[0].count || 0,
+          totalStudentsEnrolled: studentsCountResult[0].count || 0,
+          averageTestScore: avgScoreResult[0].avgScore ? Math.round(avgScoreResult[0].avgScore * 100) / 100 : 0,
+          courses: coursesResult
+        };
+      } catch (statsError) {
+        console.error('Error fetching teacher statistics:', statsError);
+        // Continue with default stats if there's an error
+        courseStats = {
+          totalCoursesCreated: 0,
+          totalStudentsEnrolled: 0,
+          averageTestScore: 0,
+          courses: []
+        };
+      }
+    } 
+    // For admins, set course counts to 0
+    else {
       courseStats = {
         coursesInProgress: 0,
         coursesCompleted: 0

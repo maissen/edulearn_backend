@@ -175,7 +175,7 @@ Authorization: Bearer <token>
 - **Description:** Get current user profile
 - **Auth:** Required (any role)
 - **Success:** 200 OK
-- **Response:**
+- **Response for students:**
 ```json
 {
   "id": "number",
@@ -187,7 +187,47 @@ Authorization: Bearer <token>
   "coursesCompleted": "number"
 }
 ```
-- **Note:** For students (`role: "etudiant"`), `coursesInProgress` and `coursesCompleted` show actual enrollment counts. For other roles (teachers, admins), these values are 0.
+- **Response for teachers:**
+```json
+{
+  "id": "number",
+  "username": "string",
+  "email": "string",
+  "role": "string",
+  "biography": "string",
+  "totalCoursesCreated": "number",
+  "totalStudentsEnrolled": "number",
+  "averageTestScore": "number",
+  "courses": [
+    {
+      "id": "number",
+      "titre": "string",
+      "description": "string",
+      "category": "string",
+      "youtube_vd_url": "string",
+      "created_at": "string",
+      "updated_at": "string",
+      "enrolled_students": "number"
+    }
+  ]
+}
+```
+- **Response for admins:**
+```json
+{
+  "id": "number",
+  "username": "string",
+  "email": "string",
+  "role": "string",
+  "biography": "string",
+  "coursesInProgress": 0,
+  "coursesCompleted": 0
+}
+```
+- **Note:** 
+  - For students (`role: "etudiant"`), `coursesInProgress` and `coursesCompleted` show actual enrollment counts.
+  - For teachers (`role: "enseignant"`), the response includes teacher-specific statistics: total courses created, total unique students enrolled across all their courses, average test score across all their courses, and a detailed list of all courses they've created.
+  - For admins (`role: "admin"`), `coursesInProgress` and `coursesCompleted` are always 0.
 
 ### PUT /profile
 - **Description:** Update current user profile (username and biography)
