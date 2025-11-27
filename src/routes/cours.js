@@ -8,7 +8,8 @@ import {
   getRelatedCourses,
   createCours,
   updateCours,
-  deleteCours
+  deleteCours,
+  updateCoursWithTest
 } from "../controllers/coursController.js";
 
 import { verifyToken } from "../middlewares/authMiddleware.js";
@@ -27,6 +28,7 @@ router.get("/:id/related", getRelatedCourses);
 
 router.post("/", verifyToken, isTeacherOrAdmin, createCours);
 router.put("/:id", verifyToken, isTeacherOrAdmin, updateCours);
+router.put("/:id/with-test", verifyToken, isTeacherOrAdmin, updateCoursWithTest);
 router.delete("/:id", verifyToken, isTeacherOrAdmin, deleteCours);
 
 export default router;

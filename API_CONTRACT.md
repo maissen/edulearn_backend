@@ -461,6 +461,40 @@ Authorization: Bearer <token>
 }
 ```
 
+### PUT /cours/:id/with-test
+- **Description:** Update a course and its associated test/questions
+- **Auth:** Required (enseignant only - own courses)
+- **Body:**
+```json
+{
+  "titre": "string",
+  "description": "string",
+  "category": "string",
+  "youtube_vd_url": "string",
+  "test_titre": "string",
+  "questions": [
+    {
+      "id": "number",
+      "question": "string",
+      "options": {
+        "a": "string",
+        "b": "string",
+        "c": "string",
+        "d": "string"
+      }
+    }
+  ]
+}
+```
+- **Success:** 200 OK
+- **Response:**
+```json
+{
+  "message": "Course and test updated successfully"
+}
+```
+- **Note:** If a question ID is provided, the question will be updated. If no ID is provided, a new question will be created. Questions that exist in the database but are not included in the request will be deleted.
+
 ### DELETE /cours/:id
 - **Description:** Delete a course
 - **Auth:** Required (enseignant only - own courses)

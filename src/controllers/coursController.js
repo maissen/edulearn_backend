@@ -392,6 +392,110 @@ export const updateCours = async (req, res) => {
   res.json({ message: "Cours modifié" });
 };
 
+export const updateCoursWithTest = async (req, res) => {
+  const connection = await db.getConnection();
+  try {
+    await connection.beginTransaction();
+    
+    const courseId = req.params.id;
+    const { 
+      titre, 
+      description, 
+      category, 
+      youtube_vd_url,
+      test_titre,
+      questions 
+    } = req.body;
+
+    // Update course details
+    await connection.query(
+      "UPDATE cours SET titre = ?, description = ?, category = ?, youtube_vd_url = ? WHERE id = ?",
+      [titre, description, category, youtube_vd_url, courseId]
+    );
+
+    // Check if a test exists for this course
+    const [testRows] = await connection.query(
+      "SELECT id FROM test WHERE cours_id = ?",
+      [courseId]
+    );
+
+    let testId;
+    if (testRows.length > 0) {
+      // Test exists, use its ID
+      testId = testRows[0].id;
+      // Update test title if provided
+      if (test_titre) {
+        await connection.query(
+          "UPDATE test SET titre = ? WHERE id = ?",
+          [test_titre, testId]
+        );
+      }
+    } else {
+      // No test exists, create one
+      const [testResult] = await connection.query(
+        "INSERT INTO test (titre, description, cours_id) VALUES (?, ?, ?)",
+        [test_titre || `${category} questions test`, "", courseId]
+      );
+      testId = testResult.insertId;
+    }
+
+    // Handle questions update
+    if (Array.isArray(questions)) {
+      // Get existing question IDs for this test
+      const [existingQuestions] = await connection.query(
+        "SELECT id FROM test_questions WHERE test_id = ?",
+        [testId]
+      );
+      
+      const existingQuestionIds = existingQuestions.map(q => q.id);
+      const updatedQuestionIds = questions.filter(q => q.id).map(q => q.id);
+      
+      // Delete questions that are not in the updated list
+      const questionsToDelete = existingQuestionIds.filter(id => !updatedQuestionIds.includes(id));
+      if (questionsToDelete.length > 0) {
+        const placeholders = questionsToDelete.map(() => '?').join(',');
+        await connection.query(
+          `DELETE FROM test_questions WHERE id IN (${placeholders})`,
+          questionsToDelete
+        );
+      }
+      
+      // Update or insert questions
+      for (const question of questions) {
+        const { id, question: questionText, options } = question;
+        const { a, b, c, d } = options;
+        
+        if (id) {
+          // Update existing question
+          await connection.query(
+            `UPDATE test_questions 
+             SET question = ?, option_a = ?, option_b = ?, option_c = ?, option_d = ?
+             WHERE id = ?`,
+            [questionText, a, b, c, d, id]
+          );
+        } else {
+          // Insert new question
+          await connection.query(
+            `INSERT INTO test_questions 
+             (test_id, question, option_a, option_b, option_c, option_d, answer)
+             VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            [testId, questionText, a, b, c, d, 'a'] // Default answer to 'a'
+          );
+        }
+      }
+    }
+
+    await connection.commit();
+    res.json({ message: "Course and test updated successfully" });
+  } catch (error) {
+    await connection.rollback();
+    console.error('Error updating course with test:', error);
+    res.status(500).json({ error: 'Failed to update course and test' });
+  } finally {
+    connection.release();
+  }
+};
+
 export const deleteCours = async (req, res) => {
   await db.query("DELETE FROM cours WHERE id = ?", [req.params.id]);
   res.json({ message: "Cours supprimé" });
