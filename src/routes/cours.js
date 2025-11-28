@@ -7,6 +7,7 @@ import {
   getCourseContent,
   getRelatedCourses,
   createCours,
+  createCoursWithTest,
   updateCours,
   deleteCours,
   updateCoursWithTest
@@ -27,6 +28,7 @@ router.get("/:id/content", optionalAuth, getCourseContent);
 router.get("/:id/related", getRelatedCourses);
 
 router.post("/", verifyToken, isTeacherOrAdmin, createCours);
+router.post("/with-test", verifyToken, isTeacherOrAdmin, createCoursWithTest);
 router.put("/:id", verifyToken, isTeacherOrAdmin, updateCours);
 router.put("/:id/with-test", verifyToken, isTeacherOrAdmin, updateCoursWithTest);
 router.delete("/:id", verifyToken, isTeacherOrAdmin, deleteCours);

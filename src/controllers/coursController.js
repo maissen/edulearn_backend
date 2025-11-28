@@ -381,6 +381,65 @@ export const createCours = async (req, res) => {
   res.json({ message: "Cours ajouté" });
 };
 
+export const createCoursWithTest = async (req, res) => {
+  const connection = await db.getConnection();
+  try {
+    await connection.beginTransaction();
+    
+    const { 
+      titre, 
+      description, 
+      category, 
+      youtube_vd_url,
+      enseignant_id,
+      test_titre,
+      questions 
+    } = req.body;
+
+    // Create course
+    const [courseResult] = await connection.query(
+      "INSERT INTO cours(titre, description, category, youtube_vd_url, enseignant_id) VALUES (?, ?, ?, ?, ?)",
+      [titre, description, category, youtube_vd_url, enseignant_id]
+    );
+    
+    const courseId = courseResult.insertId;
+
+    // Create test for the course
+    const [testResult] = await connection.query(
+      "INSERT INTO test (titre, description, cours_id) VALUES (?, ?, ?)",
+      [test_titre || `${category} questions test`, "", courseId]
+    );
+    
+    const testId = testResult.insertId;
+
+    // Handle questions creation
+    if (Array.isArray(questions)) {
+      // Insert questions
+      for (const question of questions) {
+        const { question: questionText, options } = question;
+        const { a, b, c, d } = options;
+        
+        // Insert new question
+        await connection.query(
+          `INSERT INTO test_questions 
+           (test_id, question, option_a, option_b, option_c, option_d, answer)
+           VALUES (?, ?, ?, ?, ?, ?, ?)`,
+          [testId, questionText, a, b, c, d, 'a'] // Default answer to 'a'
+        );
+      }
+    }
+
+    await connection.commit();
+    res.json({ message: "Course and test created successfully", courseId });
+  } catch (error) {
+    await connection.rollback();
+    console.error('Error creating course with test:', error);
+    res.status(500).json({ error: 'Failed to create course and test' });
+  } finally {
+    connection.release();
+  }
+};
+
 export const updateCours = async (req, res) => {
   const { titre, description, category, youtube_vd_url } = req.body;
 

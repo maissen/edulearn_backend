@@ -441,6 +441,40 @@ Authorization: Bearer <token>
 }
 ```
 
+### POST /cours/with-test
+- **Description:** Create a new course with associated test and questions
+- **Auth:** Required (enseignant only)
+- **Body:**
+```json
+{
+  "titre": "string",
+  "description": "string",
+  "category": "string",
+  "youtube_vd_url": "string",
+  "enseignant_id": "number",
+  "test_titre": "string",
+  "questions": [
+    {
+      "question": "string",
+      "options": {
+        "a": "string",
+        "b": "string",
+        "c": "string",
+        "d": "string"
+      }
+    }
+  ]
+}
+```
+- **Success:** 200 OK
+- **Response:**
+```json
+{
+  "message": "Course and test created successfully",
+  "courseId": "number"
+}
+```
+
 ### PUT /cours/:id
 - **Description:** Update a course
 - **Auth:** Required (enseignant only - own courses)
