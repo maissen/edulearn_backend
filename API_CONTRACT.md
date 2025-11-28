@@ -755,6 +755,39 @@ Authorization: Bearer <token>
 }
 ```
 
+### GET /enseignant/tests
+- **Description:** Get all tests created by the authenticated teacher with student results
+- **Auth:** Required (enseignant only)
+- **Success:** 200 OK
+- **Response:**
+```json
+[
+  {
+    "test_id": "number",
+    "test_title": "string",
+    "test_description": "string",
+    "test_created_at": "string",
+    "test_updated_at": "string",
+    "course_id": "number",
+    "course_title": "string",
+    "course_description": "string",
+    "course_category": "string",
+    "students": [
+      {
+        "etudiant_id": "number",
+        "student_username": "string",
+        "student_email": "string",
+        "score": "number",
+        "total_questions": "number",
+        "correct_answers": "number",
+        "submitted_at": "string"
+      }
+    ]
+  }
+]
+```
+- **Note:** Returns all tests created by the teacher, each with a list of students who took the test and their results. Results are ordered by score (highest first).
+
 ---
 
 ## 8. Etudiant Routes
@@ -899,7 +932,7 @@ Authorization: Bearer <token>
 - **Description:** Mark an in-progress course as completed and move it to finished courses
 - **Auth:** Required (etudiant only)
 - **Body:**
-```json
+``json
 {
   "coursId": "number"
 }
@@ -1175,7 +1208,7 @@ Authorization: Bearer <token>
 - **Description:** Create a test (teacher-only, one per course, with all questions)
 - **Auth:** enseignant only
 - **Body:**
-```json
+``json
 {
   "titre": "string",
   "description": "string",
