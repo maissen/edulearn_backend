@@ -265,6 +265,8 @@ Authorization: Bearer <token>
     "titre": "string",
     "description": "string",
     "category": "string",
+    "youtube_vd_url": "string",
+    "image_url": "string",
     "enseignant_id": "number"
   }
 ]
@@ -283,6 +285,7 @@ Authorization: Bearer <token>
     "description": "string",
     "category": "string",
     "youtube_vd_url": "string",
+    "image_url": "string",
     "enseignant_id": "number",
     "created_at": "string",
     "updated_at": "string",
@@ -321,6 +324,7 @@ Authorization: Bearer <token>
         "titre": "string",
         "description": "string",
         "enseignant_id": "number",
+        "image_url": "string",
         "teacher_username": "string",
         "teacher_email": "string"
       }
@@ -334,6 +338,7 @@ Authorization: Bearer <token>
         "titre": "string",
         "description": "string",
         "enseignant_id": "number",
+        "image_url": "string",
         "teacher_username": "string",
         "teacher_email": "string"
       }
@@ -356,6 +361,7 @@ Authorization: Bearer <token>
   "description": "string",
   "category": "string",
   "youtube_vd_url": "string",
+  "image_url": "string",
   "enseignant_id": "number",
   "imageUrl": "string",
   "duration": "string",
@@ -377,6 +383,7 @@ Authorization: Bearer <token>
   "description": "string",
   "category": "string",
   "youtube_vd_url": "string",
+  "image_url": "string",
   "enseignant_id": "number",
   "teacher_username": "string",
   "teacher_email": "string",
@@ -474,6 +481,7 @@ Authorization: Bearer <token>
   "description": "string",
   "category": "string",
   "youtube_vd_url": "string",
+  "image_url": "string",
   "enseignant_id": "number",
   "test_titre": "string",
   "questions": [
@@ -491,7 +499,7 @@ Authorization: Bearer <token>
 ```
 - **Success:** 200 OK
 - **Response:**
-```json
+``json
 {
   "message": "Course and test created successfully",
   "courseId": "number"
@@ -507,7 +515,8 @@ Authorization: Bearer <token>
   "titre": "string",
   "description": "string",
   "category": "string",
-  "youtube_vd_url": "string"
+  "youtube_vd_url": "string",
+  "image_url": "string"
 }
 ```
 - **Success:** 200 OK
@@ -522,12 +531,13 @@ Authorization: Bearer <token>
 - **Description:** Update a course and its associated test/questions
 - **Auth:** Required (enseignant only - own courses)
 - **Body:**
-```json
+``json
 {
   "titre": "string",
   "description": "string",
   "category": "string",
   "youtube_vd_url": "string",
+  "image_url": "string",
   "test_titre": "string",
   "questions": [
     {
@@ -659,7 +669,7 @@ Authorization: Bearer <token>
 - **Auth:** None
 - **Success:** 200 OK
 - **Response:**
-```json
+``json
 [
   {
     "id": "number",
@@ -760,7 +770,7 @@ Authorization: Bearer <token>
 - **Auth:** Required (enseignant only)
 - **Success:** 200 OK
 - **Response:**
-```json
+``json
 [
   {
     "test_id": "number",
@@ -828,7 +838,7 @@ Authorization: Bearer <token>
 - **Auth:** Required (etudiant or admin)
 - **Success:** 200 OK
 - **Response:**
-```json
+``json
 {
   "inProgress": [
     {
@@ -904,7 +914,7 @@ Authorization: Bearer <token>
 - **Auth:** Required (admin)
 - **Success:** 200 OK
 - **Response:**
-```json
+``json
 {
   "message": "Étudiant supprimé"
 }
@@ -914,7 +924,7 @@ Authorization: Bearer <token>
 - **Description:** Add a course to the student's in-progress courses list
 - **Auth:** Required (etudiant only)
 - **Body:**
-```json
+``json
 {
   "coursId": "number"
 }
@@ -1014,7 +1024,7 @@ Authorization: Bearer <token>
 - **Auth:** Required (etudiant only)
 - **Success:** 200 OK
 - **Response:**
-```json
+``json
 {
   "isEnrolled": "boolean",
   "status": "string", // "in_progress" or "completed" or null
@@ -1183,7 +1193,7 @@ Authorization: Bearer <token>
 - **Auth:** None
 - **Success:** 200 OK
 - **Response:**
-```json
+``json
 {
   "id": "number",                // test (exam) id
   "titre": "string",             // test title
@@ -1227,7 +1237,7 @@ Authorization: Bearer <token>
 ```
 - **Success:** 200 OK
 - **Response:**
-```json
+``json
 {
   "message": "Test created with questions",
   "testId": "number",

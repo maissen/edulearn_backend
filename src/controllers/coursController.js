@@ -1,7 +1,7 @@
 import { db } from "../../config/db.js";
 
 export const getAllCours = async (req, res) => {
-  const [rows] = await db.query("SELECT id, titre, description, category, youtube_vd_url, enseignant_id FROM cours");
+  const [rows] = await db.query("SELECT id, titre, description, category, youtube_vd_url, image_url, enseignant_id FROM cours");
   res.json(rows);
 };
 
@@ -45,6 +45,7 @@ export const getCoursesGroupedByCategory = async (req, res) => {
         c.description,
         c.category,
         c.youtube_vd_url,
+        c.image_url,
         c.enseignant_id,
         e.username as teacher_username,
         e.email as teacher_email
@@ -77,7 +78,7 @@ export const getCoursesGroupedByCategory = async (req, res) => {
 };
 
 export const getCoursById = async (req, res) => {
-  const [rows] = await db.query("SELECT id, titre, description, category, youtube_vd_url, enseignant_id FROM cours WHERE id = ?", [req.params.id]);
+  const [rows] = await db.query("SELECT id, titre, description, category, youtube_vd_url, image_url, enseignant_id FROM cours WHERE id = ?", [req.params.id]);
   res.json(rows[0]);
 };
 
@@ -93,6 +94,7 @@ export const getCourseContent = async (req, res) => {
         c.description,
         c.category,
         c.youtube_vd_url,
+        c.image_url,
         c.enseignant_id,
         e.username as teacher_username,
         e.email as teacher_email
@@ -127,7 +129,6 @@ export const getCourseContent = async (req, res) => {
           "SELECT id FROM etudiants WHERE email = ?",
           [req.user.email]
         );
-        
         if (studentRows.length > 0) {
           const studentId = studentRows[0].id;
           
@@ -337,7 +338,7 @@ export const getRelatedCourses = async (req, res) => {
 
     // First, get the category of the current course
     const [currentCourse] = await db.query(
-      "SELECT category, youtube_vd_url FROM cours WHERE id = ?",
+      "SELECT category FROM cours WHERE id = ?",
       [courseId]
     );
 
@@ -352,7 +353,7 @@ export const getRelatedCourses = async (req, res) => {
       SELECT 
         c.id,
         c.titre,
-        '' as imageUrl,
+        c.image_url as imageUrl,
         0 as price,
         0 as rating,
         e.username as instructor
@@ -371,11 +372,11 @@ export const getRelatedCourses = async (req, res) => {
 };
 
 export const createCours = async (req, res) => {
-  const { titre, description, category, youtube_vd_url, enseignant_id } = req.body;
+  const { titre, description, category, youtube_vd_url, image_url, enseignant_id } = req.body;
 
   await db.query(
-    "INSERT INTO cours(titre, description, category, youtube_vd_url, enseignant_id) VALUES (?, ?, ?, ?, ?)",
-    [titre, description, category, youtube_vd_url, enseignant_id]
+    "INSERT INTO cours(titre, description, category, youtube_vd_url, image_url, enseignant_id) VALUES (?, ?, ?, ?, ?, ?)",
+    [titre, description, category, youtube_vd_url, image_url, enseignant_id]
   );
 
   res.json({ message: "Cours ajouté" });
@@ -391,6 +392,7 @@ export const createCoursWithTest = async (req, res) => {
       description, 
       category, 
       youtube_vd_url,
+      image_url,
       enseignant_id,
       test_titre,
       questions 
@@ -398,8 +400,8 @@ export const createCoursWithTest = async (req, res) => {
 
     // Create course
     const [courseResult] = await connection.query(
-      "INSERT INTO cours(titre, description, category, youtube_vd_url, enseignant_id) VALUES (?, ?, ?, ?, ?)",
-      [titre, description, category, youtube_vd_url, enseignant_id]
+      "INSERT INTO cours(titre, description, category, youtube_vd_url, image_url, enseignant_id) VALUES (?, ?, ?, ?, ?, ?)",
+      [titre, description, category, youtube_vd_url, image_url, enseignant_id]
     );
     
     const courseId = courseResult.insertId;
@@ -441,11 +443,11 @@ export const createCoursWithTest = async (req, res) => {
 };
 
 export const updateCours = async (req, res) => {
-  const { titre, description, category, youtube_vd_url } = req.body;
+  const { titre, description, category, youtube_vd_url, image_url } = req.body;
 
   await db.query(
-    "UPDATE cours SET titre = ?, description = ?, category = ?, youtube_vd_url = ? WHERE id = ?",
-    [titre, description, category, youtube_vd_url, req.params.id]
+    "UPDATE cours SET titre = ?, description = ?, category = ?, youtube_vd_url = ?, image_url = ? WHERE id = ?",
+    [titre, description, category, youtube_vd_url, image_url, req.params.id]
   );
 
   res.json({ message: "Cours modifié" });
@@ -462,14 +464,15 @@ export const updateCoursWithTest = async (req, res) => {
       description, 
       category, 
       youtube_vd_url,
+      image_url,
       test_titre,
       questions 
     } = req.body;
 
     // Update course details
     await connection.query(
-      "UPDATE cours SET titre = ?, description = ?, category = ?, youtube_vd_url = ? WHERE id = ?",
-      [titre, description, category, youtube_vd_url, courseId]
+      "UPDATE cours SET titre = ?, description = ?, category = ?, youtube_vd_url = ?, image_url = ? WHERE id = ?",
+      [titre, description, category, youtube_vd_url, image_url, courseId]
     );
 
     // Check if a test exists for this course
@@ -569,6 +572,7 @@ export const getRecentCourses = async (req, res) => {
         c.description,
         c.category,
         c.youtube_vd_url,
+        c.image_url,
         c.enseignant_id,
         c.created_at,
         c.updated_at,

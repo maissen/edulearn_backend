@@ -12,18 +12,18 @@ export default class Cours {
   }
 
   static async create(data) {
-    const { titre, description, category, youtube_vd_url, enseignant_id } = data;
+    const { titre, description, category, youtube_vd_url, image_url, enseignant_id } = data;
     await db.query(
-      "INSERT INTO cours(titre, description, category, youtube_vd_url, enseignant_id) VALUES (?, ?, ?, ?, ?)",
-      [titre, description, category, youtube_vd_url, enseignant_id]
+      "INSERT INTO cours(titre, description, category, youtube_vd_url, image_url, enseignant_id) VALUES (?, ?, ?, ?, ?, ?)",
+      [titre, description, category, youtube_vd_url, image_url, enseignant_id]
     );
   }
 
   static async update(id, data) {
-    const { titre, description, category, youtube_vd_url } = data;
+    const { titre, description, category, youtube_vd_url, image_url } = data;
     await db.query(
-      "UPDATE cours SET titre = ?, description = ?, category = ?, youtube_vd_url = ? WHERE id = ?",
-      [titre, description, category, youtube_vd_url, id]
+      "UPDATE cours SET titre = ?, description = ?, category = ?, youtube_vd_url = ?, image_url = ? WHERE id = ?",
+      [titre, description, category, youtube_vd_url, image_url, id]
     );
   }
 
