@@ -559,3 +559,30 @@ export const deleteCours = async (req, res) => {
   await db.query("DELETE FROM cours WHERE id = ?", [req.params.id]);
   res.json({ message: "Cours supprimé" });
 };
+
+export const getRecentCourses = async (req, res) => {
+  try {
+    const [rows] = await db.query(`
+      SELECT 
+        c.id,
+        c.titre,
+        c.description,
+        c.category,
+        c.youtube_vd_url,
+        c.enseignant_id,
+        c.created_at,
+        c.updated_at,
+        e.username as teacher_username,
+        e.email as teacher_email
+      FROM cours c
+      LEFT JOIN enseignants e ON c.enseignant_id = e.id
+      ORDER BY c.created_at DESC
+      LIMIT 6
+    `);
+    
+    res.json(rows);
+  } catch (error) {
+    console.error('Error fetching recent courses:', error);
+    res.status(500).json({ error: 'Failed to fetch recent courses' });
+  }
+};

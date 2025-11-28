@@ -270,6 +270,29 @@ Authorization: Bearer <token>
 ]
 ```
 
+### GET /cours/recent
+- **Description:** Get the 6 most recent courses for guest users
+- **Auth:** None
+- **Success:** 200 OK
+- **Response:**
+```json
+[
+  {
+    "id": "number",
+    "titre": "string",
+    "description": "string",
+    "category": "string",
+    "youtube_vd_url": "string",
+    "enseignant_id": "number",
+    "created_at": "string",
+    "updated_at": "string",
+    "teacher_username": "string",
+    "teacher_email": "string"
+  }
+]
+```
+- **Note:** Returns the 6 most recently created courses with full details including teacher information.
+
 ### GET /cours/categories
 - **Description:** Get all unique course categories
 - **Auth:** None
@@ -1032,7 +1055,7 @@ Authorization: Bearer <token>
 ```
 - **Success:** 200 OK
 - **Response:**
-```json
+``json
 {
   "message": "Classe modifiée"
 }

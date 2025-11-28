@@ -10,7 +10,8 @@ import {
   createCoursWithTest,
   updateCours,
   deleteCours,
-  updateCoursWithTest
+  updateCoursWithTest,
+  getRecentCourses
 } from "../controllers/coursController.js";
 
 import { verifyToken } from "../middlewares/authMiddleware.js";
@@ -20,6 +21,7 @@ import { isTeacherOrAdmin } from "../middlewares/roleMiddleware.js";
 const router = express.Router();
 
 router.get("/", getAllCours);
+router.get("/recent", getRecentCourses);
 router.get("/categories", getCourseCategories);
 router.get("/grouped-by-category", getCoursesGroupedByCategory);
 router.get("/:id", getCoursById);
