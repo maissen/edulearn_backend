@@ -1,3 +1,5 @@
+import { db } from "../../config/db.js";
+
 export const getProfile = async (req, res) => {
   try {
     // Determine which table to query based on user role
