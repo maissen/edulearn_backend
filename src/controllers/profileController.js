@@ -1,5 +1,3 @@
-import { db } from "../../config/db.js";
-
 export const getProfile = async (req, res) => {
   try {
     // Determine which table to query based on user role
@@ -88,13 +86,14 @@ export const getProfile = async (req, res) => {
             c.description,
             c.category,
             c.youtube_vd_url,
+            c.image_url,
             c.created_at,
             c.updated_at,
             COUNT(se.id) as enrolled_students
           FROM cours c
           LEFT JOIN student_enrollments se ON c.id = se.cours_id
           WHERE c.enseignant_id = ?
-          GROUP BY c.id, c.titre, c.description, c.category, c.youtube_vd_url, c.created_at, c.updated_at
+          GROUP BY c.id, c.titre, c.description, c.category, c.youtube_vd_url, c.image_url, c.created_at, c.updated_at
           ORDER BY c.created_at DESC
         `, [req.user.id]);
 

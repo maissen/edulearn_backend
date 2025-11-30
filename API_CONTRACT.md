@@ -205,6 +205,7 @@ Authorization: Bearer <token>
       "description": "string",
       "category": "string",
       "youtube_vd_url": "string",
+      "image_url": "string",
       "created_at": "string",
       "updated_at": "string",
       "enrolled_students": "number"
@@ -931,7 +932,7 @@ Authorization: Bearer <token>
 ```
 - **Success:** 200 OK
 - **Response:**
-```json
+``json
 {
   "message": "Course added to in-progress list successfully"
 }

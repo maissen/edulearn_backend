@@ -6,8 +6,14 @@ import Etudiant from "../models/Etudiant.js"; // Import Etudiant model to get st
 export const getTestByCourse = async (req, res) => {
   try {
     const courseId = req.params.courseId;
-    // Get test for this course
-    const [testRows] = await db.query("SELECT id, titre, description, cours_id FROM test WHERE cours_id = ?", [courseId]);
+    // Get test for this course with course details
+    const [testRows] = await db.query(
+      `SELECT t.id, t.titre, t.description, t.cours_id, c.image_url as cover_image_url, c.category 
+       FROM test t 
+       JOIN cours c ON t.cours_id = c.id 
+       WHERE t.cours_id = ?`,
+      [courseId]
+    );
     if (testRows.length === 0) {
       return res.json({});
     }
