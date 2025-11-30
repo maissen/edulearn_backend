@@ -90,14 +90,46 @@ export const getProfile = async (req, res) => {
             c.youtube_vd_url,
             c.image_url,
             c.created_at,
-            c.updated_at,
-            COUNT(se.id) as enrolled_students
+            c.updated_at
           FROM cours c
-          LEFT JOIN student_enrollments se ON c.id = se.cours_id
           WHERE c.enseignant_id = ?
-          GROUP BY c.id, c.titre, c.description, c.category, c.youtube_vd_url, c.image_url, c.created_at, c.updated_at
           ORDER BY c.created_at DESC
         `, [req.user.id]);
+
+        // For each course, get enrolled students and finished students
+        for (const course of coursesResult) {
+          // Get enrolled students (in progress)
+          const [enrolledStudents] = await db.query(`
+            SELECT 
+              e.username,
+              e.email,
+              se.started_at as enrolled_at,
+              se.status
+            FROM student_enrollments se
+            JOIN etudiants e ON se.etudiant_id = e.id
+            WHERE se.cours_id = ? AND se.status = 'in_progress'
+            ORDER BY se.started_at DESC
+          `, [course.id]);
+
+          // Get students who finished the course
+          const [finishedStudents] = await db.query(`
+            SELECT 
+              e.username,
+              e.email,
+              fc.completed_at as finished_at,
+              fc.final_grade
+            FROM finished_courses fc
+            JOIN etudiants e ON fc.etudiant_id = e.id
+            WHERE fc.cours_id = ?
+            ORDER BY fc.completed_at DESC
+          `, [course.id]);
+
+          // Add students data to course
+          course.enrolled_students = enrolledStudents;
+          course.finished_students = finishedStudents;
+          course.total_enrolled = enrolledStudents.length;
+          course.total_finished = finishedStudents.length;
+        }
 
         courseStats = {
           totalCoursesCreated: coursesCountResult[0].count || 0,
