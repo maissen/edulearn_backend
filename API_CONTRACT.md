@@ -1280,6 +1280,76 @@ Authorization: Bearer <token>
 }
 ```
 
+### GET /admin/teachers
+- **Description:** Get all teachers with activation status
+- **Auth:** Required (admin)
+- **Success:** 200 OK
+- **Response:**
+```json
+[
+  {
+    "id": "number",
+    "username": "string",
+    "email": "string",
+    "module": "string",
+    "isActivated": "boolean"
+  }
+]
+```
+
+### GET /admin/students
+- **Description:** Get all students with activation status
+- **Auth:** Required (admin)
+- **Success:** 200 OK
+- **Response:**
+```json
+[
+  {
+    "id": "number",
+    "username": "string",
+    "email": "string",
+    "classe_id": "number",
+    "isActivated": "boolean"
+  }
+]
+```
+
+### PATCH /admin/teachers/:id/activation
+- **Description:** Toggle activation status for a teacher
+- **Auth:** Required (admin)
+- **Body:**
+```json
+{
+  "isActivated": "boolean"
+}
+```
+- **Success:** 200 OK
+- **Response:**
+```json
+{
+  "message": "Teacher activated/deactivated successfully",
+  "isActivated": "boolean"
+}
+```
+
+### PATCH /admin/students/:id/activation
+- **Description:** Toggle activation status for a student
+- **Auth:** Required (admin)
+- **Body:**
+```json
+{
+  "isActivated": "boolean"
+}
+```
+- **Success:** 200 OK
+- **Response:**
+```json
+{
+  "message": "Student activated/deactivated successfully",
+  "isActivated": "boolean"
+}
+```
+
 ---
 
 ## Static Files

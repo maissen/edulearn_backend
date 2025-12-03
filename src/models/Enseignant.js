@@ -7,19 +7,27 @@ export default class Enseignant {
   }
 
   static async create(data) {
-    const { username, email, module } = data;
+    const { username, email, module, isActivated = true } = data;
     await db.query(
-      "INSERT INTO enseignants(username, email, module) VALUES (?, ?, ?)",
-      [username, email, module]
+      "INSERT INTO enseignants(username, email, module, isActivated) VALUES (?, ?, ?, ?)",
+      [username, email, module, isActivated]
     );
   }
 
   static async update(id, data) {
-    const { username, email, module } = data;
-    await db.query(
-      "UPDATE enseignants SET username = ?, email = ?, module = ? WHERE id = ?",
-      [username, email, module, id]
-    );
+    const { username, email, module, isActivated } = data;
+    let query = "UPDATE enseignants SET username = ?, email = ?, module = ?";
+    const params = [username, email, module];
+    
+    if (isActivated !== undefined) {
+      query += ", isActivated = ?";
+      params.push(isActivated);
+    }
+    
+    query += " WHERE id = ?";
+    params.push(id);
+    
+    await db.query(query, params);
   }
 
   static async delete(id) {

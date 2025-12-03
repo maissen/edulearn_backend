@@ -17,8 +17,8 @@ export const registerStudent = async (req, res) => {
 
     // Insert directly into etudiants table with default class and password
     await db.query(
-      "INSERT INTO etudiants(username, email, password, classe_id) VALUES (?, ?, ?, ?)",
-      [username, email, hashed, 1] // Default to class ID 1
+      "INSERT INTO etudiants(username, email, password, classe_id, isActivated) VALUES (?, ?, ?, ?, ?)",
+      [username, email, hashed, 1, true] // Default to class ID 1 and activated status true
     );
 
     res.json({ message: "Student registered successfully" });
@@ -43,8 +43,8 @@ export const registerTeacher = async (req, res) => {
 
     // Insert directly into enseignants table with password
     await db.query(
-      "INSERT INTO enseignants(username, email, password, module) VALUES (?, ?, ?, ?)",
-      [username, email, hashed, "General"]
+      "INSERT INTO enseignants(username, email, password, module, isActivated) VALUES (?, ?, ?, ?, ?)",
+      [username, email, hashed, "General", true]
     );
 
     res.json({ message: "Teacher registered successfully" });
@@ -91,10 +91,10 @@ const performLogin = async (req, res, tableName, role) => {
     // Determine which table to query based on role
     switch (tableName) {
       case "etudiants":
-        query = "SELECT id, username, email, password FROM etudiants WHERE email = ?";
+        query = "SELECT id, username, email, password, isActivated FROM etudiants WHERE email = ?";
         break;
       case "enseignants":
-        query = "SELECT id, username, email, password FROM enseignants WHERE email = ?";
+        query = "SELECT id, username, email, password, isActivated FROM enseignants WHERE email = ?";
         break;
       case "admins":
         query = "SELECT id, username, email, password FROM admins WHERE email = ?";
@@ -109,6 +109,16 @@ const performLogin = async (req, res, tableName, role) => {
     }
 
     user = rows[0];
+
+    // Check if user is deactivated (admins don't have isActivated field)
+    if (user.isActivated !== undefined && user.isActivated === false) {
+      return res.status(403).json({ message: "Account is deactivated. Please contact administrator." });
+    }
+
+    // For teachers and students, verify they are activated
+    if ((tableName === "etudiants" || tableName === "enseignants") && user.isActivated !== true) {
+      return res.status(403).json({ message: "Account is deactivated. Please contact administrator." });
+    }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {

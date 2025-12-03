@@ -13,6 +13,7 @@ import classeRoutes from "./routes/classe.js";
 import examenRoutes from "./routes/examen.js";
 import quizRoutes from "./routes/quiz.js";
 import questionRoutes from "./routes/question.js";
+import adminRoutes from "./routes/admin.js";
 // Import the submitTest controller function directly
 import { submitTest } from "./controllers/quizController.js";
 import { verifyToken } from "./middlewares/authMiddleware.js";
@@ -42,6 +43,7 @@ app.use("/classe", classeRoutes);
 app.use("/examen", examenRoutes);
 app.use("/quiz", quizRoutes);
 app.use("/question", questionRoutes);
+app.use("/admin", adminRoutes);
 
 // Add the test submit route directly to make it accessible at /test/submit
 app.post("/test/submit", verifyToken, isEtudiant, submitTest);

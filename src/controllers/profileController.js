@@ -9,10 +9,10 @@ export const getProfile = async (req, res) => {
         query = "SELECT id, username, email, 'admin' as role, biography FROM admins WHERE id = ?";
         break;
       case "enseignant":
-        query = "SELECT id, username, email, 'enseignant' as role, biography FROM enseignants WHERE id = ?";
+        query = "SELECT id, username, email, 'enseignant' as role, biography, isActivated FROM enseignants WHERE id = ?";
         break;
       case "etudiant":
-        query = "SELECT id, username, email, 'etudiant' as role, biography FROM etudiants WHERE id = ?";
+        query = "SELECT id, username, email, 'etudiant' as role, biography, isActivated FROM etudiants WHERE id = ?";
         break;
       default:
         return res.status(404).json({ message: "User not found" });
