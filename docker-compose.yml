@@ -40,6 +40,7 @@ services:
       DB_PORT: 3306
       JWT_SECRET: ${JWT_SECRET}
       NODE_ENV: ${NODE_ENV}
+      LOG_LEVEL: ${LOG_LEVEL}
     ports:
       - "${PORT}:5000"
     volumes:
@@ -49,7 +50,7 @@ services:
       - ./logs:/app/logs
     networks:
       - school_network
-    command: npm run dev
+    command: npm start
 
   # PhpMyAdmin
   phpmyadmin:

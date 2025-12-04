@@ -1,25 +1,37 @@
 import { db } from "../../config/db.js";
+import logger from "../utils/logger.js";
 
 export const getAllCours = async (req, res) => {
-  const [rows] = await db.query("SELECT id, titre, description, category, youtube_vd_url, image_url, enseignant_id FROM cours");
-  res.json(rows);
+  try {
+    logger.info('Fetching all courses');
+    const [rows] = await db.query("SELECT id, titre, description, category, youtube_vd_url, image_url, enseignant_id FROM cours");
+    logger.info('Successfully fetched all courses', { count: rows.length });
+    res.json(rows);
+  } catch (err) {
+    logger.error('Error fetching all courses', { error: err.message, stack: err.stack });
+    res.status(500).json({ error: err.message });
+  }
 };
 
 export const getCourseCategories = async (req, res) => {
   try {
+    logger.info('Fetching course categories');
     const [rows] = await db.query(
       "SELECT DISTINCT category FROM cours WHERE category IS NOT NULL AND category != '' ORDER BY category"
     );
     const categories = rows.map(row => row.category);
+    logger.info('Successfully fetched course categories', { count: categories.length });
     res.json(categories);
   } catch (error) {
-    console.error('Error fetching course categories:', error);
+    logger.error('Error fetching course categories', { error: error.message, stack: error.stack });
     res.status(500).json({ error: 'Failed to fetch course categories' });
   }
 };
 
 export const getCoursesGroupedByCategory = async (req, res) => {
   try {
+    logger.info('Fetching courses grouped by category');
+    
     // First, get enrollment counts per category
     const [enrollmentCounts] = await db.query(`
       SELECT
@@ -70,21 +82,38 @@ export const getCoursesGroupedByCategory = async (req, res) => {
       groupedCourses[category].courses.push(courseData);
     });
 
+    logger.info('Successfully fetched courses grouped by category', { categories: Object.keys(groupedCourses).length });
     res.json(groupedCourses);
   } catch (error) {
-    console.error('Error fetching courses grouped by category:', error);
+    logger.error('Error fetching courses grouped by category', { error: error.message, stack: error.stack });
     res.status(500).json({ error: 'Failed to fetch courses grouped by category' });
   }
 };
 
 export const getCoursById = async (req, res) => {
-  const [rows] = await db.query("SELECT id, titre, description, category, youtube_vd_url, image_url, enseignant_id FROM cours WHERE id = ?", [req.params.id]);
-  res.json(rows[0]);
+  try {
+    const courseId = req.params.id;
+    logger.info('Fetching course by ID', { courseId });
+    
+    const [rows] = await db.query("SELECT id, titre, description, category, youtube_vd_url, image_url, enseignant_id FROM cours WHERE id = ?", [courseId]);
+    
+    if (rows.length === 0) {
+      logger.warn('Course not found', { courseId });
+      return res.status(404).json({ error: 'Course not found' });
+    }
+    
+    logger.info('Successfully fetched course by ID', { courseId });
+    res.json(rows[0]);
+  } catch (err) {
+    logger.error('Error fetching course by ID', { error: err.message, stack: err.stack, courseId: req.params.id });
+    res.status(500).json({ error: err.message });
+  }
 };
 
 export const getCourseContent = async (req, res) => {
   try {
     const courseId = req.params.id;
+    logger.info('Fetching course content', { courseId });
 
     // Get course details with teacher information
     const [courseRows] = await db.query(`
@@ -104,6 +133,7 @@ export const getCourseContent = async (req, res) => {
     `, [courseId]);
 
     if (courseRows.length === 0) {
+      logger.warn('Course not found when fetching content', { courseId });
       return res.status(404).json({ error: 'Course not found' });
     }
 
@@ -178,7 +208,7 @@ export const getCourseContent = async (req, res) => {
           }
         }
       } catch (error) {
-        console.error('Error checking test completion status:', error);
+        logger.error('Error checking test completion status', { error: error.message, stack: error.stack });
         // Don't fail the request if we can't determine test status
       }
     }
@@ -233,7 +263,7 @@ export const getCourseContent = async (req, res) => {
           }
         }
       } catch (error) {
-        console.error('Error checking test completion status:', error);
+        logger.error('Error checking test completion status for teacher/admin view', { error: error.message, stack: error.stack });
         // Don't fail the request if we can't determine test status
       }
     }
@@ -323,10 +353,11 @@ export const getCourseContent = async (req, res) => {
       };
     }
 
+    logger.info('Successfully fetched course content', { courseId, hasTest: !!course.test });
     res.json(course);
 
   } catch (error) {
-    console.error('Error fetching course content:', error);
+    logger.error('Error fetching course content', { error: error.message, stack: error.stack, courseId: req.params.id });
     res.status(500).json({ error: 'Failed to fetch course content' });
   }
 };
@@ -335,6 +366,7 @@ export const getCourseContent = async (req, res) => {
 export const getRelatedCourses = async (req, res) => {
   try {
     const courseId = req.params.id;
+    logger.info('Fetching related courses', { courseId });
 
     // First, get the category of the current course
     const [currentCourse] = await db.query(
@@ -343,6 +375,7 @@ export const getRelatedCourses = async (req, res) => {
     );
 
     if (currentCourse.length === 0) {
+      logger.warn('Course not found when fetching related courses', { courseId });
       return res.status(404).json({ error: 'Course not found' });
     }
 
@@ -362,11 +395,12 @@ export const getRelatedCourses = async (req, res) => {
       WHERE c.category = ? AND c.id != ?
       LIMIT 5
     `, [category, courseId]);
-
+    
+    logger.info('Successfully fetched related courses', { courseId, count: rows.length });
     res.json(rows);
 
   } catch (error) {
-    console.error('Error fetching related courses:', error);
+    logger.error('Error fetching related courses', { error: error.message, stack: error.stack, courseId: req.params.id });
     res.status(500).json({ error: 'Failed to fetch related courses' });
   }
 };
@@ -374,12 +408,20 @@ export const getRelatedCourses = async (req, res) => {
 export const createCours = async (req, res) => {
   const { titre, description, category, youtube_vd_url, image_url, enseignant_id } = req.body;
 
-  await db.query(
-    "INSERT INTO cours(titre, description, category, youtube_vd_url, image_url, enseignant_id) VALUES (?, ?, ?, ?, ?, ?)",
-    [titre, description, category, youtube_vd_url, image_url, enseignant_id]
-  );
+  try {
+    logger.info('Creating new course', { titre, category, enseignant_id });
+    
+    await db.query(
+      "INSERT INTO cours(titre, description, category, youtube_vd_url, image_url, enseignant_id) VALUES (?, ?, ?, ?, ?, ?)",
+      [titre, description, category, youtube_vd_url, image_url, enseignant_id]
+    );
 
-  res.json({ message: "Cours ajouté" });
+    logger.info('Course created successfully', { titre, category });
+    res.json({ message: "Cours ajouté" });
+  } catch (err) {
+    logger.error('Error creating course', { error: err.message, stack: err.stack });
+    res.status(500).json({ error: err.message });
+  }
 };
 
 export const createCoursWithTest = async (req, res) => {
@@ -398,6 +440,8 @@ export const createCoursWithTest = async (req, res) => {
       questions 
     } = req.body;
 
+    logger.info('Creating course with test', { titre, category, enseignant_id, testTitle: test_titre, questionCount: questions?.length || 0 });
+    
     // Create course
     const [courseResult] = await connection.query(
       "INSERT INTO cours(titre, description, category, youtube_vd_url, image_url, enseignant_id) VALUES (?, ?, ?, ?, ?, ?)",
@@ -432,10 +476,11 @@ export const createCoursWithTest = async (req, res) => {
     }
 
     await connection.commit();
+    logger.info('Course and test created successfully', { courseId, testId });
     res.json({ message: "Course and test created successfully", courseId });
   } catch (error) {
     await connection.rollback();
-    console.error('Error creating course with test:', error);
+    logger.error('Error creating course with test', { error: error.message, stack: error.stack });
     res.status(500).json({ error: 'Failed to create course and test' });
   } finally {
     connection.release();
@@ -444,13 +489,22 @@ export const createCoursWithTest = async (req, res) => {
 
 export const updateCours = async (req, res) => {
   const { titre, description, category, youtube_vd_url, image_url } = req.body;
+  const courseId = req.params.id;
 
-  await db.query(
-    "UPDATE cours SET titre = ?, description = ?, category = ?, youtube_vd_url = ?, image_url = ? WHERE id = ?",
-    [titre, description, category, youtube_vd_url, image_url, req.params.id]
-  );
+  try {
+    logger.info('Updating course', { courseId, titre, category });
+    
+    await db.query(
+      "UPDATE cours SET titre = ?, description = ?, category = ?, youtube_vd_url = ?, image_url = ? WHERE id = ?",
+      [titre, description, category, youtube_vd_url, image_url, courseId]
+    );
 
-  res.json({ message: "Cours modifié" });
+    logger.info('Course updated successfully', { courseId });
+    res.json({ message: "Cours modifié" });
+  } catch (err) {
+    logger.error('Error updating course', { error: err.message, stack: err.stack, courseId });
+    res.status(500).json({ error: err.message });
+  }
 };
 
 export const updateCoursWithTest = async (req, res) => {
@@ -469,6 +523,8 @@ export const updateCoursWithTest = async (req, res) => {
       questions 
     } = req.body;
 
+    logger.info('Updating course with test', { courseId, titre, category, testTitle: test_titre, questionCount: questions?.length || 0 });
+    
     // Update course details
     await connection.query(
       "UPDATE cours SET titre = ?, description = ?, category = ?, youtube_vd_url = ?, image_url = ? WHERE id = ?",
@@ -548,10 +604,11 @@ export const updateCoursWithTest = async (req, res) => {
     }
 
     await connection.commit();
+    logger.info('Course and test updated successfully', { courseId, testId });
     res.json({ message: "Course and test updated successfully" });
   } catch (error) {
     await connection.rollback();
-    console.error('Error updating course with test:', error);
+    logger.error('Error updating course with test', { error: error.message, stack: error.stack, courseId: req.params.id });
     res.status(500).json({ error: 'Failed to update course and test' });
   } finally {
     connection.release();
@@ -559,12 +616,25 @@ export const updateCoursWithTest = async (req, res) => {
 };
 
 export const deleteCours = async (req, res) => {
-  await db.query("DELETE FROM cours WHERE id = ?", [req.params.id]);
-  res.json({ message: "Cours supprimé" });
+  const courseId = req.params.id;
+  
+  try {
+    logger.info('Deleting course', { courseId });
+    
+    await db.query("DELETE FROM cours WHERE id = ?", [courseId]);
+    
+    logger.info('Course deleted successfully', { courseId });
+    res.json({ message: "Cours supprimé" });
+  } catch (err) {
+    logger.error('Error deleting course', { error: err.message, stack: err.stack, courseId });
+    res.status(500).json({ error: err.message });
+  }
 };
 
 export const getRecentCourses = async (req, res) => {
   try {
+    logger.info('Fetching recent courses');
+    
     const [rows] = await db.query(`
       SELECT 
         c.id,
@@ -584,9 +654,10 @@ export const getRecentCourses = async (req, res) => {
       LIMIT 6
     `);
     
+    logger.info('Successfully fetched recent courses', { count: rows.length });
     res.json(rows);
   } catch (error) {
-    console.error('Error fetching recent courses:', error);
+    logger.error('Error fetching recent courses', { error: error.message, stack: error.stack });
     res.status(500).json({ error: 'Failed to fetch recent courses' });
   }
 };

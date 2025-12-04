@@ -1,11 +1,14 @@
 import { db } from "../../config/db.js";
 import TestResult from "../models/QuizResult.js"; // This model now handles all test result logic
 import Etudiant from "../models/Etudiant.js"; // Import Etudiant model to get student ID
+import logger from "../utils/logger.js";
 
 // Get test for a course, with all questions
 export const getTestByCourse = async (req, res) => {
   try {
     const courseId = req.params.courseId;
+    logger.info('Fetching test for course', { courseId });
+    
     // Get test for this course with course details
     const [testRows] = await db.query(
       `SELECT t.id, t.titre, t.description, t.cours_id, c.image_url as cover_image_url, c.category 
@@ -15,6 +18,7 @@ export const getTestByCourse = async (req, res) => {
       [courseId]
     );
     if (testRows.length === 0) {
+      logger.warn('No test found for course', { courseId });
       return res.json({});
     }
     const test = testRows[0];
@@ -33,9 +37,11 @@ export const getTestByCourse = async (req, res) => {
         d: q.option_d
       }
     }));
+    
+    logger.info('Successfully fetched test for course', { courseId, testId: test.id, questionCount: test.questions.length });
     res.json(test);
   } catch (error) {
-    console.error('Error fetching test for course:', error);
+    logger.error('Error fetching test for course', { error: error.message, stack: error.stack, courseId: req.params.courseId });
     res.status(500).json({ error: 'Failed to fetch test for course' });
   }
 };
@@ -46,8 +52,12 @@ export const createTest = async (req, res) => {
   try {
     await connection.beginTransaction();
     const { titre, description, cours_id, questions } = req.body;
+    
+    logger.info('Creating new test', { cours_id, titre, questionCount: questions?.length || 0 });
+    
     if (!titre || !cours_id || !Array.isArray(questions) || questions.length === 0) {
       await connection.rollback();
+      logger.warn('Invalid request for test creation - missing required fields');
       return res.status(400).json({
         message: "Invalid request: 'titre', 'cours_id', and non-empty 'questions' are required."
       });
@@ -56,6 +66,7 @@ export const createTest = async (req, res) => {
     const [testRows] = await connection.query("SELECT id FROM test WHERE cours_id = ?", [cours_id]);
     if (testRows.length > 0) {
       await connection.rollback();
+      logger.warn('Test already exists for course', { cours_id });
       return res.status(409).json({ message: "Test already exists for this course." });
     }
     // Insert test
@@ -68,10 +79,12 @@ export const createTest = async (req, res) => {
       const { question, option_a, option_b, option_c, option_d, answer } = q;
       if (!question || !option_a || !option_b || !option_c || !option_d || !answer) {
         await connection.rollback();
+        logger.warn('Invalid question format in test creation');
         return res.status(400).json({ message: "Each question must have 'question', 'option_a', 'option_b', 'option_c', 'option_d', and 'answer' fields." });
       }
       if (!["a", "b", "c", "d"].includes(answer.toLowerCase())) {
         await connection.rollback();
+        logger.warn('Invalid answer option in test creation');
         return res.status(400).json({ message: "Answer must be one of: a, b, c, d" });
       }
       await connection.query(
@@ -81,10 +94,11 @@ export const createTest = async (req, res) => {
       );
     }
     await connection.commit();
+    logger.info('Test created successfully', { testId, cours_id, questionCount: questions.length });
     res.json({ message: "Test created with questions", testId, questionsCount: questions.length });
   } catch (error) {
     await connection.rollback();
-    console.error('Error creating test:', error);
+    logger.error('Error creating test', { error: error.message, stack: error.stack });
     res.status(500).json({ error: 'Failed to create test' });
   } finally {
     connection.release();
@@ -95,10 +109,15 @@ export const createTest = async (req, res) => {
 export const deleteTest = async (req, res) => {
   try {
     const testId = req.params.id;
+    logger.info('Deleting test', { testId });
+    
     // Delete test and cascade delete its questions (handled by FK)
     await db.query("DELETE FROM test WHERE id = ?", [testId]);
+    
+    logger.info('Test deleted successfully', { testId });
     res.json({ message: 'Test deleted' });
   } catch (error) {
+    logger.error('Error deleting test', { error: error.message, stack: error.stack, testId: req.params.id });
     res.status(500).json({ error: error.message });
   }
 };
@@ -110,21 +129,22 @@ export const submitTest = async (req, res) => {
     const userId = req.user.id;
     const userEmail = req.user.email;
     
-    console.log(`Processing test submission for user ID: ${userId}, email: ${userEmail}`);
+    logger.info('Processing test submission', { userId, userEmail });
     
     // Look up the student ID using the email (email is unique and should match between users and etudiants tables)
     const student = await Etudiant.findByEmail(userEmail);
     if (!student) {
-      console.error(`Student not found for email: ${userEmail}, userId: ${userId}`);
+      logger.error('Student not found for test submission', { userEmail, userId });
       return res.status(400).json({ error: `Student record not found for email: ${userEmail}` });
     }
     
-    console.log(`Found student ID: ${student.id} for email: ${userEmail}`);
+    logger.debug('Found student for test submission', { studentId: student.id, userEmail });
     
     const etudiantId = student.id;
     const { testID, submissions } = req.body;
     
     if (!testID || !Array.isArray(submissions) || submissions.length === 0) {
+      logger.warn('Invalid test submission - missing required fields');
       return res.status(400).json({ error: "testID and non-empty submissions are required" });
     }
     
@@ -143,20 +163,22 @@ export const submitTest = async (req, res) => {
         try {
           // Complete the course for the student
           await StudentEnrollment.completeCourse(etudiantId, courseId);
-          console.log(`Course ${courseId} automatically completed for student ${etudiantId} due to high test score (${result.score})`);
+          logger.info('Course automatically completed due to high test score', { courseId, studentId: etudiantId, score: result.score });
         } catch (completionError) {
-          console.error('Error automatically completing course:', completionError);
+          logger.error('Error automatically completing course', { error: completionError.message, stack: completionError.stack, courseId, studentId: etudiantId });
           // Don't fail the test submission if course completion fails
         }
       }
     }
     
+    logger.info('Test submission successful', { testID, studentId: etudiantId, score: result.score });
     res.json({ message: "Submission successful", result });
   } catch (error) {
     if (error.message.includes("already submitted")) {
+      logger.warn('Test already submitted', { error: error.message });
       return res.status(409).json({ error: error.message });
     }
-    console.error('Error submitting test:', error);
+    logger.error('Error submitting test', { error: error.message, stack: error.stack });
     res.status(500).json({ error: error.message });
   }
 };

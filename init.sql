@@ -459,7 +459,7 @@ INSERT IGNORE INTO test_questions (test_id, question, option_a, option_b, option
 
 -- ====================[ SAMPLE ADMINS ]========================
 INSERT IGNORE INTO admins (username, email, password) VALUES
-('admin_user', 'admin@school.com', '$2b$10$rVHMO/JrxDMM6QlDyzo7kOjBv.LvgF.hy.B11HGM5Ea6PXCsP2kW2');
+('admin_user', 'admin@school.com', '$2b$10$yh1C2c09DmiqVB2lpHz90.3unob2bTTCpnVHOSX1m3YwTRY8JmZBC');
 
 -- ====================[ SAMPLE TEACHERS ]========================
 INSERT IGNORE INTO enseignants (username, email, password, module, isActivated) VALUES
