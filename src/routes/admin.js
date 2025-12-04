@@ -6,6 +6,7 @@ import {
   toggleStudentActivation,
   createTeacher,
   createStudent,
+  createAdmin,
   deleteTeacher,
   deleteStudent,
   getAllTeacherCourses,
@@ -38,6 +39,9 @@ router.post("/teachers", verifyToken, isAdmin, createTeacher);
 
 // Create a new student account (admin only)
 router.post("/students", verifyToken, isAdmin, createStudent);
+
+// Create a new admin account (admin only)
+router.post("/admins", verifyToken, isAdmin, createAdmin);
 
 // Delete a teacher account and all related data (admin only)
 router.delete("/teachers/:id", verifyToken, isAdmin, deleteTeacher);

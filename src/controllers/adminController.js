@@ -325,6 +325,47 @@ export const createStudent = async (req, res) => {
   }
 };
 
+// Create a new admin account (admin only)
+export const createAdmin = async (req, res) => {
+  try {
+    const { username, email, password } = req.body;
+    
+    logger.info('Admin creating admin account', { email, username, adminId: req.user?.id });
+    
+    // Check if admin already exists
+    const [existingAdmin] = await db.query(
+      "SELECT id FROM admins WHERE email = ?",
+      [email]
+    );
+    
+    if (existingAdmin.length > 0) {
+      return res.status(400).json({ message: "Admin with this email already exists" });
+    }
+    
+    // Hash the password before storing
+    const hashedPassword = await bcrypt.hash(password, 10);
+    
+    // Insert new admin
+    const [result] = await db.query(
+      "INSERT INTO admins (username, email, password) VALUES (?, ?, ?)",
+      [username, email, hashedPassword]
+    );
+    
+    const [newAdmin] = await db.query(
+      "SELECT id, username, email, created_at, updated_at FROM admins WHERE id = ?",
+      [result.insertId]
+    );
+    
+    res.status(201).json({
+      message: "Admin account created successfully",
+      admin: newAdmin[0]
+    });
+  } catch (err) {
+    logger.error('Error creating admin account', { error: err.message, stack: err.stack, adminId: req.user?.id });
+    res.status(500).json({ error: err.message });
+  }
+};
+
 // Delete a teacher account and all related data (admin only)
 export const deleteTeacher = async (req, res) => {
   const connection = await db.getConnection();

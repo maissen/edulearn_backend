@@ -463,13 +463,13 @@ INSERT IGNORE INTO admins (username, email, password) VALUES
 
 -- ====================[ SAMPLE TEACHERS ]========================
 INSERT IGNORE INTO enseignants (username, email, password, module, isActivated) VALUES
-('teacher_user', 'teacher@school.com', '$2b$10$rVHMO/JrxDMM6QlDyzo7kOjBv.LvgF.hy.B11HGM5Ea6PXCsP2kW2', 'General', true);
+('teacher_user', 'teacher@school.com', '$2b$10$iOWMp7pw9hE.qsAeiBC3oufugsWm8GZIbtN9Y1yJR8Fnf6GwcsuQG', 'General', true);
 
 -- ====================[ SAMPLE STUDENTS ]========================
 INSERT IGNORE INTO etudiants (username, email, password, classe_id, isActivated) VALUES
-('student_one', 'student1@school.com', '$2b$10$rVHMO/JrxDMM6QlDyzo7kOjBv.LvgF.hy.B11HGM5Ea6PXCsP2kW2', 1, true),
-('student_two', 'student2@school.com', '$2b$10$rVHMO/JrxDMM6QlDyzo7kOjBv.LvgF.hy.B11HGM5Ea6PXCsP2kW2', 2, true),
-('student_three', 'student3@school.com', '$2b$10$rVHMO/JrxDMM6QlDyzo7kOjBv.LvgF.hy.B11HGM5Ea6PXCsP2kW2', 3, true);
+('student_one', 'student1@school.com', '$2b$10$iOWMp7pw9hE.qsAeiBC3oufugsWm8GZIbtN9Y1yJR8Fnf6GwcsuQG', 1, true),
+('student_two', 'student2@school.com', '$2b$10$iOWMp7pw9hE.qsAeiBC3oufugsWm8GZIbtN9Y1yJR8Fnf6GwcsuQG', 2, true),
+('student_three', 'student3@school.com', '$2b$10$iOWMp7pw9hE.qsAeiBC3oufugsWm8GZIbtN9Y1yJR8Fnf6GwcsuQG', 3, true);
 
 -- ====================[ SAMPLE STUDENT ENROLLMENTS ]========================
 INSERT IGNORE INTO student_enrollments (etudiant_id, cours_id, status, progress_percentage) VALUES
