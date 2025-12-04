@@ -293,6 +293,12 @@ export const getAllTeacherCourses = async (req, res) => {
         let course = teachersData[teacherId].courses.find(c => c.id === row.course_id);
         
         if (!course) {
+          // Handle potentially null or non-numeric values
+          const avgScore = row.average_test_score;
+          const formattedAvgScore = (avgScore !== null && !isNaN(parseFloat(avgScore))) 
+            ? parseFloat(parseFloat(avgScore).toFixed(2)) 
+            : 0;
+            
           course = {
             id: row.course_id,
             title: row.course_title,
@@ -306,17 +312,23 @@ export const getAllTeacherCourses = async (req, res) => {
               id: row.test_id,
               title: row.test_title,
               description: row.test_description,
-              question_count: row.test_question_count
+              question_count: row.test_question_count || 0
             } : null,
-            enrolled_student_count: row.enrolled_student_count,
-            average_test_score: row.average_test_score ? parseFloat(row.average_test_score.toFixed(2)) : null
+            enrolled_student_count: row.enrolled_student_count || 0,
+            average_test_score: formattedAvgScore
           };
           teachersData[teacherId].courses.push(course);
         } else {
           // Update enrolled student count and average test score (they might differ per test)
-          course.enrolled_student_count = Math.max(course.enrolled_student_count, row.enrolled_student_count);
-          if (row.average_test_score && (!course.average_test_score || row.average_test_score > course.average_test_score)) {
-            course.average_test_score = parseFloat(row.average_test_score.toFixed(2));
+          course.enrolled_student_count = Math.max(course.enrolled_student_count, row.enrolled_student_count || 0);
+          
+          // Handle average test score update
+          const avgScore = row.average_test_score;
+          if (avgScore !== null && !isNaN(parseFloat(avgScore))) {
+            const formattedScore = parseFloat(parseFloat(avgScore).toFixed(2));
+            if (!course.average_test_score || formattedScore > course.average_test_score) {
+              course.average_test_score = formattedScore;
+            }
           }
         }
       }
@@ -329,6 +341,7 @@ export const getAllTeacherCourses = async (req, res) => {
       teachers: teachersArray
     });
   } catch (err) {
+    console.error('Error in getAllTeacherCourses:', err);
     res.status(500).json({ error: err.message });
   }
 };

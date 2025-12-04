@@ -6,7 +6,7 @@ export const getProfile = async (req, res) => {
     let query = "";
     switch (req.user.role) {
       case "admin":
-        query = "SELECT id, username, email, 'admin' as role, biography FROM admins WHERE id = ?";
+        query = "SELECT id, username, email, 'admin' as role FROM admins WHERE id = ?";
         break;
       case "enseignant":
         query = "SELECT id, username, email, 'enseignant' as role, biography, isActivated FROM enseignants WHERE id = ?";
