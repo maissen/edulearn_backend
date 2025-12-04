@@ -231,3 +231,74 @@ export const downloadBackup = async (req, res) => {
     }
   }
 };
+
+// Delete a backup file
+export const deleteBackup = async (req, res) => {
+  try {
+    const { filename } = req.params;
+    
+    logger.info('Admin deleting backup', { 
+      filename, 
+      adminId: req.user?.id 
+    });
+    
+    // Validate filename (prevent directory traversal)
+    if (!filename || filename.includes('/') || filename.includes('..') || !filename.endsWith('.sql.gz')) {
+      logger.warn('Invalid backup filename for deletion', { 
+        filename, 
+        adminId: req.user?.id 
+      });
+      
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid filename'
+      });
+    }
+    
+    const filepath = path.join(process.cwd(), 'backups', filename);
+    
+    // Check if file exists
+    try {
+      await fs.access(filepath);
+    } catch (err) {
+      if (err.code === 'ENOENT') {
+        logger.warn('Backup file not found for deletion', { 
+          filename, 
+          adminId: req.user?.id 
+        });
+        
+        return res.status(404).json({
+          success: false,
+          error: 'Backup file not found'
+        });
+      }
+      throw err;
+    }
+    
+    // Delete the file
+    await fs.unlink(filepath);
+    
+    logger.info('Backup file deleted successfully', { 
+      filename, 
+      adminId: req.user?.id 
+    });
+    
+    res.json({
+      success: true,
+      message: 'Backup file deleted successfully',
+      filename
+    });
+  } catch (err) {
+    logger.error('Error deleting backup', { 
+      error: err.message, 
+      stack: err.stack,
+      adminId: req.user?.id 
+    });
+    
+    res.status(500).json({ 
+      success: false, 
+      error: 'Failed to delete backup',
+      message: err.message 
+    });
+  }
+};

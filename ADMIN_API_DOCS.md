@@ -309,3 +309,18 @@ Authorization: Bearer <token>
   - `filename`: Name of the backup file to download
 - **Success:** 200 OK (file download)
 - **Response:** Binary gzip file content
+
+### DELETE /admin/backups/:filename
+- **Description:** Delete a specific database backup file
+- **Auth:** Required (admin only)
+- **Parameters:**
+  - `filename`: Name of the backup file to delete
+- **Success:** 200 OK
+- **Response:**
+```json
+{
+  "success": true,
+  "message": "Backup file deleted successfully",
+  "filename": "backup-2025-12-04T14-30-00.000Z.sql.gz"
+}
+```

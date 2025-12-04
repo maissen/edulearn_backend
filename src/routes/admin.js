@@ -11,7 +11,7 @@ import {
   deleteCourse
 } from "../controllers/adminController.js";
 import { getLogs, getLogStats } from "../controllers/logController.js";
-import { createBackup, listBackups, downloadBackup } from "../controllers/backupController.js";
+import { createBackup, listBackups, downloadBackup, deleteBackup } from "../controllers/backupController.js";
 import { isAdmin } from "../middlewares/roleMiddleware.js";
 import { verifyToken } from "../middlewares/authMiddleware.js";
 
@@ -58,5 +58,8 @@ router.get("/backups", verifyToken, isAdmin, listBackups);
 
 // Download a backup file (admin only)
 router.get("/backups/:filename", verifyToken, isAdmin, downloadBackup);
+
+// Delete a backup file (admin only)
+router.delete("/backups/:filename", verifyToken, isAdmin, deleteBackup);
 
 export default router;
