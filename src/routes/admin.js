@@ -1,6 +1,7 @@
 import express from "express";
 import { 
   getAllUsers,
+  getStatistics,
   toggleTeacherActivation,
   toggleStudentActivation,
   createTeacher,
@@ -10,7 +11,7 @@ import {
   getAllTeacherCourses,
   deleteCourse
 } from "../controllers/adminController.js";
-import { getLogs, getLogStats } from "../controllers/logController.js";
+import { getLogs, getLogStats, exportLogsCSV } from "../controllers/logController.js";
 import { createBackup, listBackups, downloadBackup, deleteBackup } from "../controllers/backupController.js";
 import { isAdmin } from "../middlewares/roleMiddleware.js";
 import { verifyToken } from "../middlewares/authMiddleware.js";
@@ -19,6 +20,9 @@ const router = express.Router();
 
 // Get all users (admins, teachers, students) with all details (admin only)
 router.get("/users", verifyToken, isAdmin, getAllUsers);
+
+// Get statistics (admin only)
+router.get("/statistics", verifyToken, isAdmin, getStatistics);
 
 // Get all courses of teachers with all details (admin only)
 router.get("/teacher-courses", verifyToken, isAdmin, getAllTeacherCourses);
@@ -49,6 +53,9 @@ router.get("/logs", verifyToken, isAdmin, getLogs);
 
 // Get log stats (admin only)
 router.get("/log-stats", verifyToken, isAdmin, getLogStats);
+
+// Export logs as CSV (admin only)
+router.get("/logs/export", verifyToken, isAdmin, exportLogsCSV);
 
 // Create database backup (admin only)
 router.post("/backup", verifyToken, isAdmin, createBackup);

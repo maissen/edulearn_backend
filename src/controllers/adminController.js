@@ -1,404 +1,468 @@
 import { db } from "../../config/db.js";
-import bcrypt from "bcryptjs";
+import logger from "../utils/logger.js";
 
-// Get all users (admins, teachers, students) with all details
+// Get all users (admins, teachers, students) with all details (admin only)
 export const getAllUsers = async (req, res) => {
   try {
-    // Fetch all admins
-    const [admins] = await db.query("SELECT id, username, email, created_at, updated_at FROM admins");
+    logger.info('Admin requesting all users', { adminId: req.user?.id });
     
-    // Fetch all teachers
-    const [teachers] = await db.query("SELECT id, username, email, module, biography, isActivated, created_at, updated_at FROM enseignants");
-    
-    // Fetch all students
-    const [students] = await db.query("SELECT id, username, email, classe_id, biography, isActivated, created_at, updated_at FROM etudiants");
-    
-    // Return categorized response
+    // Get all admins
+    const [admins] = await db.query(
+      "SELECT id, username, email, created_at, updated_at FROM admins ORDER BY created_at DESC"
+    );
+
+    // Get all teachers
+    const [teachers] = await db.query(
+      "SELECT id, username, email, module, biography, isActivated, created_at, updated_at FROM enseignants ORDER BY created_at DESC"
+    );
+
+    // Get all students
+    const [students] = await db.query(
+      "SELECT id, username, email, classe_id, biography, isActivated, created_at, updated_at FROM etudiants ORDER BY created_at DESC"
+    );
+
     res.json({
-      admins: admins,
-      teachers: teachers,
-      students: students
+      admins,
+      teachers,
+      students
     });
   } catch (err) {
+    logger.error('Error fetching all users', { error: err.message, stack: err.stack, adminId: req.user?.id });
     res.status(500).json({ error: err.message });
   }
 };
 
-// Toggle activation status for a teacher
+// Get statistics (counts of admins, teachers, students, tests, etc.)
+export const getStatistics = async (req, res) => {
+  try {
+    logger.info('Admin requesting statistics', { adminId: req.user?.id });
+    
+    // Get count of admins
+    const [adminsCount] = await db.query("SELECT COUNT(*) as count FROM admins");
+    
+    // Get count of teachers
+    const [teachersCount] = await db.query("SELECT COUNT(*) as count FROM enseignants");
+    
+    // Get count of students
+    const [studentsCount] = await db.query("SELECT COUNT(*) as count FROM etudiants");
+    
+    // Get count of courses
+    const [coursesCount] = await db.query("SELECT COUNT(*) as count FROM cours");
+    
+    // Get count of tests
+    const [testsCount] = await db.query("SELECT COUNT(*) as count FROM test");
+    
+    // Get count of questions
+    const [questionsCount] = await db.query("SELECT COUNT(*) as count FROM test_questions");
+    
+    // Get count of classes
+    const [classesCount] = await db.query("SELECT COUNT(*) as count FROM classes");
+    
+    // Get count of forum posts
+    const [forumPostsCount] = await db.query("SELECT COUNT(*) as count FROM forum_posts");
+    
+    res.json({
+      users: {
+        admins: adminsCount[0].count,
+        teachers: teachersCount[0].count,
+        students: studentsCount[0].count
+      },
+      content: {
+        courses: coursesCount[0].count,
+        tests: testsCount[0].count,
+        questions: questionsCount[0].count,
+        classes: classesCount[0].count
+      },
+      interactions: {
+        forumPosts: forumPostsCount[0].count
+      }
+    });
+  } catch (err) {
+    logger.error('Error fetching statistics', { error: err.message, stack: err.stack, adminId: req.user?.id });
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// Get all courses of teachers with all details (admin only)
+export const getAllTeacherCourses = async (req, res) => {
+  try {
+    logger.info('Admin requesting all teacher courses', { adminId: req.user?.id });
+    
+    // Get all teachers with their courses
+    const [teachers] = await db.query(`
+      SELECT 
+        e.id,
+        e.username,
+        e.email,
+        e.module,
+        e.biography,
+        e.isActivated,
+        e.created_at,
+        e.updated_at
+      FROM enseignants e
+      ORDER BY e.created_at DESC
+    `);
+    
+    // For each teacher, get their courses with test info
+    for (const teacher of teachers) {
+      const [courses] = await db.query(`
+        SELECT 
+          c.id,
+          c.titre,
+          c.description,
+          c.category,
+          c.youtube_vd_url,
+          c.image_url,
+          c.created_at,
+          c.updated_at,
+          t.id as test_id,
+          t.titre as test_title,
+          t.description as test_description
+        FROM cours c
+        LEFT JOIN test t ON c.id = t.cours_id
+        WHERE c.enseignant_id = ?
+        ORDER BY c.created_at DESC
+      `, [teacher.id]);
+      
+      // For each course, get additional stats
+      for (const course of courses) {
+        // Get question count for the test
+        if (course.test_id) {
+          const [questionCount] = await db.query(
+            "SELECT COUNT(*) as count FROM test_questions WHERE test_id = ?",
+            [course.test_id]
+          );
+          course.test = {
+            id: course.test_id,
+            title: course.test_title,
+            description: course.test_description,
+            question_count: questionCount[0].count
+          };
+        }
+        
+        // Get enrolled student count
+        const [enrollmentCount] = await db.query(
+          "SELECT COUNT(*) as count FROM student_enrollments WHERE cours_id = ?",
+          [course.id]
+        );
+        course.enrolled_student_count = enrollmentCount[0].count;
+        
+        // Get average test score
+        if (course.test_id) {
+          const [avgScore] = await db.query(`
+            SELECT AVG(score) as average_score 
+            FROM test_results 
+            WHERE test_id = ?
+          `, [course.test_id]);
+          
+          course.average_test_score = avgScore[0].average_score ? 
+            parseFloat(avgScore[0].average_score.toFixed(2)) : 0;
+        }
+        
+        // Clean up temporary fields
+        delete course.test_id;
+        delete course.test_title;
+        delete course.test_description;
+      }
+      
+      teacher.courses = courses;
+    }
+    
+    res.json({ teachers });
+  } catch (err) {
+    logger.error('Error fetching teacher courses', { error: err.message, stack: err.stack, adminId: req.user?.id });
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// Toggle teacher activation status (admin only)
 export const toggleTeacherActivation = async (req, res) => {
   try {
     const { id } = req.params;
     const { isActivated } = req.body;
-
-    // Check if teacher exists
-    const [teacher] = await db.query("SELECT * FROM enseignants WHERE id = ?", [id]);
-    if (teacher.length === 0) {
+    
+    logger.info('Admin toggling teacher activation', { teacherId: id, isActivated, adminId: req.user?.id });
+    
+    const [result] = await db.query(
+      "UPDATE enseignants SET isActivated = ? WHERE id = ?",
+      [isActivated, id]
+    );
+    
+    if (result.affectedRows === 0) {
       return res.status(404).json({ message: "Teacher not found" });
     }
-
-    // Update activation status
-    await db.query("UPDATE enseignants SET isActivated = ? WHERE id = ?", [isActivated, id]);
-
-    res.json({ 
+    
+    res.json({
       message: `Teacher ${isActivated ? 'activated' : 'deactivated'} successfully`,
-      isActivated: isActivated
+      isActivated
     });
   } catch (err) {
+    logger.error('Error toggling teacher activation', { error: err.message, stack: err.stack, adminId: req.user?.id });
     res.status(500).json({ error: err.message });
   }
 };
 
-// Toggle activation status for a student
+// Toggle student activation status (admin only)
 export const toggleStudentActivation = async (req, res) => {
   try {
     const { id } = req.params;
     const { isActivated } = req.body;
-
-    // Check if student exists
-    const [student] = await db.query("SELECT * FROM etudiants WHERE id = ?", [id]);
-    if (student.length === 0) {
+    
+    logger.info('Admin toggling student activation', { studentId: id, isActivated, adminId: req.user?.id });
+    
+    const [result] = await db.query(
+      "UPDATE etudiants SET isActivated = ? WHERE id = ?",
+      [isActivated, id]
+    );
+    
+    if (result.affectedRows === 0) {
       return res.status(404).json({ message: "Student not found" });
     }
-
-    // Update activation status
-    await db.query("UPDATE etudiants SET isActivated = ? WHERE id = ?", [isActivated, id]);
-
-    res.json({ 
+    
+    res.json({
       message: `Student ${isActivated ? 'activated' : 'deactivated'} successfully`,
-      isActivated: isActivated
+      isActivated
     });
   } catch (err) {
+    logger.error('Error toggling student activation', { error: err.message, stack: err.stack, adminId: req.user?.id });
     res.status(500).json({ error: err.message });
   }
 };
 
-// Create a new teacher account
+// Create a new teacher account (admin only)
 export const createTeacher = async (req, res) => {
   try {
-    const { username, email, password, module } = req.body;
-
+    const { username, email, password, module = "General" } = req.body;
+    
+    logger.info('Admin creating teacher account', { email, username, adminId: req.user?.id });
+    
     // Check if teacher already exists
-    const [existingTeacher] = await db.query("SELECT * FROM enseignants WHERE email = ?", [email]);
+    const [existingTeacher] = await db.query(
+      "SELECT id FROM enseignants WHERE email = ?",
+      [email]
+    );
+    
     if (existingTeacher.length > 0) {
       return res.status(400).json({ message: "Teacher with this email already exists" });
     }
-
-    // Hash the password
-    const hashedPassword = await bcrypt.hash(password, 10);
-
+    
     // Insert new teacher
     const [result] = await db.query(
       "INSERT INTO enseignants (username, email, password, module, isActivated) VALUES (?, ?, ?, ?, ?)",
-      [username, email, hashedPassword, module || "General", true]
+      [username, email, password, module, true] // Activate by default
     );
-
-    // Fetch the newly created teacher
+    
     const [newTeacher] = await db.query(
       "SELECT id, username, email, module, isActivated, created_at, updated_at FROM enseignants WHERE id = ?",
       [result.insertId]
     );
-
-    res.status(201).json({ 
+    
+    res.status(201).json({
       message: "Teacher account created successfully",
       teacher: newTeacher[0]
     });
   } catch (err) {
+    logger.error('Error creating teacher account', { error: err.message, stack: err.stack, adminId: req.user?.id });
     res.status(500).json({ error: err.message });
   }
 };
 
-// Create a new student account
+// Create a new student account (admin only)
 export const createStudent = async (req, res) => {
   try {
     const { username, email, password } = req.body;
-
+    
+    logger.info('Admin creating student account', { email, username, adminId: req.user?.id });
+    
     // Check if student already exists
-    const [existingStudent] = await db.query("SELECT * FROM etudiants WHERE email = ?", [email]);
+    const [existingStudent] = await db.query(
+      "SELECT id FROM etudiants WHERE email = ?",
+      [email]
+    );
+    
     if (existingStudent.length > 0) {
       return res.status(400).json({ message: "Student with this email already exists" });
     }
-
-    // Hash the password
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // For student creation, we'll assign them to the first available class (class ID 1 as default)
+    
+    // Insert new student (assign to class ID 1 by default)
     const [result] = await db.query(
       "INSERT INTO etudiants (username, email, password, classe_id, isActivated) VALUES (?, ?, ?, ?, ?)",
-      [username, email, hashedPassword, 1, true]
+      [username, email, password, 1, true] // Assign to class 1 and activate by default
     );
-
-    // Fetch the newly created student
+    
     const [newStudent] = await db.query(
       "SELECT id, username, email, classe_id, isActivated, created_at, updated_at FROM etudiants WHERE id = ?",
       [result.insertId]
     );
-
-    res.status(201).json({ 
+    
+    res.status(201).json({
       message: "Student account created successfully",
       student: newStudent[0]
     });
   } catch (err) {
+    logger.error('Error creating student account', { error: err.message, stack: err.stack, adminId: req.user?.id });
     res.status(500).json({ error: err.message });
   }
 };
 
-// Delete a teacher account and all related data
+// Delete a teacher account and all related data (admin only)
 export const deleteTeacher = async (req, res) => {
+  const connection = await db.getConnection();
   try {
+    await connection.beginTransaction();
+    
     const { id } = req.params;
-
+    
+    logger.info('Admin deleting teacher account', { teacherId: id, adminId: req.user?.id });
+    
     // Check if teacher exists
-    const [teacher] = await db.query("SELECT * FROM enseignants WHERE id = ?", [id]);
+    const [teacher] = await connection.query("SELECT id FROM enseignants WHERE id = ?", [id]);
     if (teacher.length === 0) {
+      await connection.rollback();
       return res.status(404).json({ message: "Teacher not found" });
     }
-
-    // Start transaction
-    await db.query("START TRANSACTION");
-
-    try {
-      // Delete all courses created by this teacher (this will cascade delete tests, test questions, etc.)
-      await db.query("DELETE FROM cours WHERE enseignant_id = ?", [id]);
+    
+    // Delete teacher's forum posts
+    await connection.query("DELETE FROM forum_posts WHERE author_id = ? AND author_type = 'enseignant'", [id]);
+    
+    // Get teacher's courses
+    const [courses] = await connection.query("SELECT id FROM cours WHERE enseignant_id = ?", [id]);
+    
+    // For each course, delete related data
+    for (const course of courses) {
+      // Get course tests
+      const [tests] = await connection.query("SELECT id FROM test WHERE cours_id = ?", [course.id]);
       
-      // Delete forum posts by this teacher
-      await db.query("DELETE FROM forum WHERE user_id = ? AND user_role = 'enseignant'", [id]);
+      // For each test, delete related data
+      for (const test of tests) {
+        // Delete test results
+        await connection.query("DELETE FROM test_results WHERE test_id = ?", [test.id]);
+        
+        // Delete test questions
+        await connection.query("DELETE FROM test_questions WHERE test_id = ?", [test.id]);
+      }
       
-      // Delete comments by this teacher
-      await db.query("DELETE FROM comments WHERE user_id = ? AND user_role = 'enseignant'", [id]);
-      
-      // Finally, delete the teacher account
-      await db.query("DELETE FROM enseignants WHERE id = ?", [id]);
-
-      // Commit transaction
-      await db.query("COMMIT");
-
-      res.json({ 
-        message: "Teacher account and all related data deleted successfully"
-      });
-    } catch (err) {
-      // Rollback transaction in case of error
-      await db.query("ROLLBACK");
-      throw err;
-    }
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-};
-
-// Delete a student account and all related data
-export const deleteStudent = async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    // Check if student exists
-    const [student] = await db.query("SELECT * FROM etudiants WHERE id = ?", [id]);
-    if (student.length === 0) {
-      return res.status(404).json({ message: "Student not found" });
-    }
-
-    // Start transaction
-    await db.query("START TRANSACTION");
-
-    try {
-      // Delete test results for this student
-      await db.query("DELETE FROM test_results WHERE etudiant_id = ?", [id]);
+      // Delete tests
+      await connection.query("DELETE FROM test WHERE cours_id = ?", [course.id]);
       
       // Delete student enrollments
-      await db.query("DELETE FROM student_enrollments WHERE etudiant_id = ?", [id]);
+      await connection.query("DELETE FROM student_enrollments WHERE cours_id = ?", [course.id]);
       
-      // Delete finished courses records
-      await db.query("DELETE FROM finished_courses WHERE etudiant_id = ?", [id]);
-      
-      // Delete forum posts by this student
-      await db.query("DELETE FROM forum WHERE user_id = ? AND user_role = 'etudiant'", [id]);
-      
-      // Delete comments by this student
-      await db.query("DELETE FROM comments WHERE user_id = ? AND user_role = 'etudiant'", [id]);
-      
-      // Finally, delete the student account
-      await db.query("DELETE FROM etudiants WHERE id = ?", [id]);
-
-      // Commit transaction
-      await db.query("COMMIT");
-
-      res.json({ 
-        message: "Student account and all related data deleted successfully"
-      });
-    } catch (err) {
-      // Rollback transaction in case of error
-      await db.query("ROLLBACK");
-      throw err;
+      // Delete course completions
+      await connection.query("DELETE FROM finished_courses WHERE cours_id = ?", [course.id]);
     }
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-};
-
-// Get all courses of teachers with all details
-export const getAllTeacherCourses = async (req, res) => {
-  try {
-    // Get all teachers with their courses
-    const query = `
-      SELECT 
-        e.id as teacher_id,
-        e.username as teacher_username,
-        e.email as teacher_email,
-        e.module as teacher_module,
-        c.id as course_id,
-        c.titre as course_title,
-        c.description as course_description,
-        c.category as course_category,
-        c.youtube_vd_url,
-        c.image_url,
-        c.created_at as course_created_at,
-        c.updated_at as course_updated_at,
-        t.id as test_id,
-        t.titre as test_title,
-        t.description as test_description,
-        COUNT(tq.id) as test_question_count,
-        COUNT(DISTINCT se.etudiant_id) as enrolled_student_count,
-        AVG(tr.score) as average_test_score
-      FROM enseignants e
-      LEFT JOIN cours c ON e.id = c.enseignant_id
-      LEFT JOIN test t ON c.id = t.cours_id
-      LEFT JOIN test_questions tq ON t.id = tq.test_id
-      LEFT JOIN student_enrollments se ON c.id = se.cours_id
-      LEFT JOIN test_results tr ON t.id = tr.test_id
-      GROUP BY e.id, c.id, t.id
-      ORDER BY e.id, c.id
-    `;
-
-    const [results] = await db.query(query);
-
-    // Organize data by teacher and course
-    const teachersData = {};
     
-    results.forEach(row => {
-      const teacherId = row.teacher_id;
-      
-      // Initialize teacher data if not exists
-      if (!teachersData[teacherId]) {
-        teachersData[teacherId] = {
-          id: row.teacher_id,
-          username: row.teacher_username,
-          email: row.teacher_email,
-          module: row.teacher_module,
-          courses: []
-        };
-      }
-      
-      // Add course data if course exists
-      if (row.course_id) {
-        // Check if course already exists in teacher's courses
-        let course = teachersData[teacherId].courses.find(c => c.id === row.course_id);
-        
-        if (!course) {
-          // Handle potentially null or non-numeric values
-          const avgScore = row.average_test_score;
-          const formattedAvgScore = (avgScore !== null && !isNaN(parseFloat(avgScore))) 
-            ? parseFloat(parseFloat(avgScore).toFixed(2)) 
-            : 0;
-            
-          course = {
-            id: row.course_id,
-            title: row.course_title,
-            description: row.course_description,
-            category: row.course_category,
-            youtube_url: row.youtube_vd_url,
-            image_url: row.image_url,
-            created_at: row.course_created_at,
-            updated_at: row.course_updated_at,
-            test: row.test_id ? {
-              id: row.test_id,
-              title: row.test_title,
-              description: row.test_description,
-              question_count: row.test_question_count || 0
-            } : null,
-            enrolled_student_count: row.enrolled_student_count || 0,
-            average_test_score: formattedAvgScore
-          };
-          teachersData[teacherId].courses.push(course);
-        } else {
-          // Update enrolled student count and average test score (they might differ per test)
-          course.enrolled_student_count = Math.max(course.enrolled_student_count, row.enrolled_student_count || 0);
-          
-          // Handle average test score update
-          const avgScore = row.average_test_score;
-          if (avgScore !== null && !isNaN(parseFloat(avgScore))) {
-            const formattedScore = parseFloat(parseFloat(avgScore).toFixed(2));
-            if (!course.average_test_score || formattedScore > course.average_test_score) {
-              course.average_test_score = formattedScore;
-            }
-          }
-        }
-      }
-    });
-
-    // Convert to array
-    const teachersArray = Object.values(teachersData);
-
-    res.json({
-      teachers: teachersArray
-    });
+    // Delete courses
+    await connection.query("DELETE FROM cours WHERE enseignant_id = ?", [id]);
+    
+    // Delete teacher account
+    await connection.query("DELETE FROM enseignants WHERE id = ?", [id]);
+    
+    await connection.commit();
+    
+    res.json({ message: "Teacher account and all related data deleted successfully" });
   } catch (err) {
-    console.error('Error in getAllTeacherCourses:', err);
+    await connection.rollback();
+    logger.error('Error deleting teacher account', { error: err.message, stack: err.stack, adminId: req.user?.id });
     res.status(500).json({ error: err.message });
+  } finally {
+    connection.release();
   }
 };
 
-// Delete a course and all related data
-export const deleteCourse = async (req, res) => {
+// Delete a student account and all related data (admin only)
+export const deleteStudent = async (req, res) => {
+  const connection = await db.getConnection();
   try {
+    await connection.beginTransaction();
+    
     const { id } = req.params;
+    
+    logger.info('Admin deleting student account', { studentId: id, adminId: req.user?.id });
+    
+    // Check if student exists
+    const [student] = await connection.query("SELECT id FROM etudiants WHERE id = ?", [id]);
+    if (student.length === 0) {
+      await connection.rollback();
+      return res.status(404).json({ message: "Student not found" });
+    }
+    
+    // Delete student's forum posts
+    await connection.query("DELETE FROM forum_posts WHERE author_id = ? AND author_type = 'etudiant'", [id]);
+    
+    // Delete test results
+    await connection.query("DELETE FROM test_results WHERE etudiant_id = ?", [id]);
+    
+    // Delete student enrollments
+    await connection.query("DELETE FROM student_enrollments WHERE etudiant_id = ?", [id]);
+    
+    // Delete course completions
+    await connection.query("DELETE FROM finished_courses WHERE etudiant_id = ?", [id]);
+    
+    // Delete student account
+    await connection.query("DELETE FROM etudiants WHERE id = ?", [id]);
+    
+    await connection.commit();
+    
+    res.json({ message: "Student account and all related data deleted successfully" });
+  } catch (err) {
+    await connection.rollback();
+    logger.error('Error deleting student account', { error: err.message, stack: err.stack, adminId: req.user?.id });
+    res.status(500).json({ error: err.message });
+  } finally {
+    connection.release();
+  }
+};
 
+// Delete a course and all related data (admin only)
+export const deleteCourse = async (req, res) => {
+  const connection = await db.getConnection();
+  try {
+    await connection.beginTransaction();
+    
+    const { id } = req.params;
+    
+    logger.info('Admin deleting course', { courseId: id, adminId: req.user?.id });
+    
     // Check if course exists
-    const [course] = await db.query("SELECT * FROM cours WHERE id = ?", [id]);
+    const [course] = await connection.query("SELECT id FROM cours WHERE id = ?", [id]);
     if (course.length === 0) {
+      await connection.rollback();
       return res.status(404).json({ message: "Course not found" });
     }
-
-    // Start transaction
-    await db.query("START TRANSACTION");
-
-    try {
-      // Delete test results for this course
-      await db.query(`
-        DELETE tr FROM test_results tr
-        JOIN test t ON tr.test_id = t.id
-        WHERE t.cours_id = ?
-      `, [id]);
+    
+    // Get course tests
+    const [tests] = await connection.query("SELECT id FROM test WHERE cours_id = ?", [id]);
+    
+    // For each test, delete related data
+    for (const test of tests) {
+      // Delete test results
+      await connection.query("DELETE FROM test_results WHERE test_id = ?", [test.id]);
       
-      // Delete test questions for this course
-      await db.query(`
-        DELETE tq FROM test_questions tq
-        JOIN test t ON tq.test_id = t.id
-        WHERE t.cours_id = ?
-      `, [id]);
-      
-      // Delete tests for this course
-      await db.query("DELETE FROM test WHERE cours_id = ?", [id]);
-      
-      // Delete student enrollments for this course
-      await db.query("DELETE FROM student_enrollments WHERE cours_id = ?", [id]);
-      
-      // Delete finished courses records for this course
-      await db.query("DELETE FROM finished_courses WHERE cours_id = ?", [id]);
-      
-      // Finally, delete the course
-      await db.query("DELETE FROM cours WHERE id = ?", [id]);
-
-      // Commit transaction
-      await db.query("COMMIT");
-
-      res.json({ 
-        message: "Course and all related data deleted successfully"
-      });
-    } catch (err) {
-      // Rollback transaction in case of error
-      await db.query("ROLLBACK");
-      throw err;
+      // Delete test questions
+      await connection.query("DELETE FROM test_questions WHERE test_id = ?", [test.id]);
     }
+    
+    // Delete tests
+    await connection.query("DELETE FROM test WHERE cours_id = ?", [id]);
+    
+    // Delete student enrollments
+    await connection.query("DELETE FROM student_enrollments WHERE cours_id = ?", [id]);
+    
+    // Delete course completions
+    await connection.query("DELETE FROM finished_courses WHERE cours_id = ?", [id]);
+    
+    // Delete course
+    await connection.query("DELETE FROM cours WHERE id = ?", [id]);
+    
+    await connection.commit();
+    
+    res.json({ message: "Course and all related data deleted successfully" });
   } catch (err) {
+    await connection.rollback();
+    logger.error('Error deleting course', { error: err.message, stack: err.stack, adminId: req.user?.id });
     res.status(500).json({ error: err.message });
+  } finally {
+    connection.release();
   }
 };

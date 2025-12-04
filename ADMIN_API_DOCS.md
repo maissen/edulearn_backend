@@ -55,6 +55,30 @@ Authorization: Bearer <token>
 }
 ```
 
+### GET /admin/statistics
+- **Description:** Get system statistics including counts of users, content, and interactions
+- **Auth:** Required (admin only)
+- **Success:** 200 OK
+- **Response:**
+```json
+{
+  "users": {
+    "admins": "number",
+    "teachers": "number",
+    "students": "number"
+  },
+  "content": {
+    "courses": "number",
+    "tests": "number",
+    "questions": "number",
+    "classes": "number"
+  },
+  "interactions": {
+    "forumPosts": "number"
+  }
+}
+```
+
 ### GET /admin/teacher-courses
 - **Description:** Get all courses of teachers with all details including test numbers, enrolled students, and average test scores
 - **Auth:** Required (admin only)
@@ -244,6 +268,14 @@ Authorization: Bearer <token>
   ]
 }
 ```
+
+### GET /admin/logs/export
+- **Description:** Export application logs as a CSV file
+- **Auth:** Required (admin only)
+- **Query Parameters:**
+  - `type` (optional): Type of logs to export ('combined' or 'error', default: 'combined')
+- **Success:** 200 OK (CSV file download)
+- **Response:** Binary CSV file content with columns: Timestamp, Level, Message, Service, Metadata
 
 ### GET /admin/log-stats
 - **Description:** Get statistics about log files including sizes and modification dates

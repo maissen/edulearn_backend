@@ -104,3 +104,72 @@ export const getLogStats = async (req, res) => {
     });
   }
 };
+
+// Export logs as CSV
+export const exportLogsCSV = async (req, res) => {
+  try {
+    const { type = 'combined' } = req.query;
+    
+    logger.info('Admin requesting CSV log export', { adminId: req.user?.id, type });
+    
+    let logFilePath;
+    if (type === 'error') {
+      logFilePath = path.join(process.cwd(), 'logs', 'error.log');
+    } else {
+      logFilePath = path.join(process.cwd(), 'logs', 'combined.log');
+    }
+    
+    // Read all lines from the log file
+    const data = await fs.readFile(logFilePath, 'utf8');
+    const lines = data.split('\n').filter(line => line.trim() !== '');
+    
+    // Parse log entries
+    const parsedLogs = parseLogEntries(lines);
+    
+    // Create CSV content
+    const csvHeaders = ['Timestamp', 'Level', 'Message', 'Service', 'Metadata'];
+    let csvContent = csvHeaders.join(',') + '\n';
+    
+    // Add each log entry as a row
+    parsedLogs.forEach(log => {
+      const row = [
+        log.timestamp || '',
+        log.level || '',
+        `"${(log.message || log.raw || '').replace(/"/g, '""')}"`, // Escape quotes
+        log.service || '',
+        `"${JSON.stringify(log).replace(/"/g, '""')}"` // Full log entry as JSON string
+      ];
+      csvContent += row.join(',') + '\n';
+    });
+    
+    // Set headers for CSV download
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const filename = `logs-${type}-${timestamp}.csv`;
+    
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader('Content-Type', 'text/csv');
+    
+    res.send(csvContent);
+    
+    logger.info('CSV log export completed', { 
+      adminId: req.user?.id, 
+      type, 
+      count: parsedLogs.length,
+      filename
+    });
+  } catch (err) {
+    logger.error('Error exporting logs as CSV', { 
+      error: err.message, 
+      stack: err.stack,
+      adminId: req.user?.id 
+    });
+    
+    if (!res.headersSent) {
+      res.status(500).json({ 
+        success: false, 
+        error: 'Failed to export logs as CSV',
+        message: err.message 
+      });
+    }
+  }
+};
