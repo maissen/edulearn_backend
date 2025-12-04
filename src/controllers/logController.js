@@ -34,7 +34,7 @@ export const getLogs = async (req, res) => {
     const { count = 50, type = 'combined' } = req.query;
     const numLines = Math.min(parseInt(count) || 50, 1000); // Limit to 1000 max
     
-    logger.info('Admin requesting logs', { adminId: req.user?.id, count: numLines, type });
+    logger.info('Administrateur demandant les journaux', { adminId: req.user?.id, count: numLines, type });
     
     let logFilePath;
     if (type === 'error') {
@@ -52,10 +52,10 @@ export const getLogs = async (req, res) => {
       logs: parsedLogs
     });
   } catch (err) {
-    logger.error('Error reading logs', { error: err.message, stack: err.stack });
+    logger.error('Erreur lors de la lecture des journaux', { error: err.message, stack: err.stack });
     res.status(500).json({ 
       success: false, 
-      error: 'Failed to read logs',
+      error: 'Échec de la lecture des journaux',
       message: err.message 
     });
   }
@@ -64,7 +64,7 @@ export const getLogs = async (req, res) => {
 // Clear all logs
 export const clearLogs = async (req, res) => {
   try {
-    logger.info('Admin clearing all logs', { adminId: req.user?.id });
+    logger.info('Administrateur effaçant tous les journaux', { adminId: req.user?.id });
     
     const logsDir = path.join(process.cwd(), 'logs');
     
@@ -75,7 +75,7 @@ export const clearLogs = async (req, res) => {
       if (err.code === 'ENOENT') {
         // If directory doesn't exist, create it
         await fs.mkdir(logsDir, { recursive: true });
-        logger.info('Logs directory created', { adminId: req.user?.id });
+        logger.info('Répertoire des journaux créé', { adminId: req.user?.id });
       } else {
         throw err;
       }
@@ -89,14 +89,14 @@ export const clearLogs = async (req, res) => {
     const combinedLogPath = path.join(logsDir, 'combined.log');
     await fs.writeFile(combinedLogPath, '');
     
-    logger.info('All logs cleared successfully', { adminId: req.user?.id });
+    logger.info('Tous les journaux effacés avec succès', { adminId: req.user?.id });
     
     res.json({
       success: true,
-      message: 'All logs cleared successfully'
+      message: 'Tous les journaux effacés avec succès'
     });
   } catch (err) {
-    logger.error('Error clearing logs', { 
+    logger.error('Erreur lors de l\'effacement des journaux', { 
       error: err.message, 
       stack: err.stack,
       adminId: req.user?.id 
@@ -104,7 +104,7 @@ export const clearLogs = async (req, res) => {
     
     res.status(500).json({ 
       success: false, 
-      error: 'Failed to clear logs',
+      error: 'Échec de l\'effacement des journaux',
       message: err.message 
     });
   }
@@ -113,7 +113,7 @@ export const clearLogs = async (req, res) => {
 // Get log file stats
 export const getLogStats = async (req, res) => {
   try {
-    logger.info('Admin requesting log stats', { adminId: req.user?.id });
+    logger.info('Administrateur demandant les statistiques des journaux', { adminId: req.user?.id });
     
     const combinedLogPath = path.join(process.cwd(), 'logs', 'combined.log');
     const errorLogPath = path.join(process.cwd(), 'logs', 'error.log');
@@ -145,10 +145,10 @@ export const getLogStats = async (req, res) => {
       stats
     });
   } catch (err) {
-    logger.error('Error getting log stats', { error: err.message, stack: err.stack });
+    logger.error('Erreur lors de l\'obtention des statistiques des journaux', { error: err.message, stack: err.stack });
     res.status(500).json({ 
       success: false, 
-      error: 'Failed to get log stats',
+      error: 'Échec de l\'obtention des statistiques des journaux',
       message: err.message 
     });
   }
@@ -159,7 +159,7 @@ export const exportLogsCSV = async (req, res) => {
   try {
     const { type = 'combined' } = req.query;
     
-    logger.info('Admin requesting CSV log export', { adminId: req.user?.id, type });
+    logger.info('Administrateur demandant l\'exportation des journaux au format CSV', { adminId: req.user?.id, type });
     
     let logFilePath;
     if (type === 'error') {
@@ -176,7 +176,7 @@ export const exportLogsCSV = async (req, res) => {
     const parsedLogs = parseLogEntries(lines);
     
     // Create CSV content
-    const csvHeaders = ['Timestamp', 'Level', 'Message', 'Service', 'Metadata'];
+    const csvHeaders = ['Horodatage', 'Niveau', 'Message', 'Service', 'Métadonnées'];
     let csvContent = csvHeaders.join(',') + '\n';
     
     // Add each log entry as a row
@@ -193,21 +193,21 @@ export const exportLogsCSV = async (req, res) => {
     
     // Set headers for CSV download
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const filename = `logs-${type}-${timestamp}.csv`;
+    const filename = `journaux-${type}-${timestamp}.csv`;
     
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
     res.setHeader('Content-Type', 'text/csv');
     
     res.send(csvContent);
     
-    logger.info('CSV log export completed', { 
+    logger.info('Exportation des journaux au format CSV terminée', { 
       adminId: req.user?.id, 
       type, 
       count: parsedLogs.length,
       filename
     });
   } catch (err) {
-    logger.error('Error exporting logs as CSV', { 
+    logger.error('Erreur lors de l\'exportation des journaux au format CSV', { 
       error: err.message, 
       stack: err.stack,
       adminId: req.user?.id 
@@ -216,7 +216,7 @@ export const exportLogsCSV = async (req, res) => {
     if (!res.headersSent) {
       res.status(500).json({ 
         success: false, 
-        error: 'Failed to export logs as CSV',
+        error: 'Échec de l\'exportation des journaux au format CSV',
         message: err.message 
       });
     }

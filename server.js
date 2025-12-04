@@ -10,31 +10,31 @@ const PORT = process.env.PORT || 5000;
 const startServer = async () => {
   try {
     await connectDB();
-    logger.info('Database connected successfully');
+    logger.info('Base de données connectée avec succès');
     
     const server = app.listen(PORT, () => {
-      logger.info(`🚀 Server running on port ${PORT}`);
+      logger.info(`🚀 Serveur en cours d'exécution sur le port ${PORT}`);
     });
     
-    // Handle graceful shutdown
+    // Gérer l'arrêt gracieux
     process.on('SIGINT', () => {
-      logger.info('Shutting down server...');
+      logger.info('Arrêt du serveur...');
       server.close(() => {
-        logger.info('Server closed');
+        logger.info('Serveur fermé');
         process.exit(0);
       });
     });
     
     process.on('SIGTERM', () => {
-      logger.info('Shutting down server...');
+      logger.info('Arrêt du serveur...');
       server.close(() => {
-        logger.info('Server closed');
+        logger.info('Serveur fermé');
         process.exit(0);
       });
     });
     
   } catch (err) {
-    logger.error('Failed to start server:', err);
+    logger.error('Échec du démarrage du serveur:', err);
     process.exit(1);
   }
 };

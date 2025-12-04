@@ -15,12 +15,12 @@ export const getProfile = async (req, res) => {
         query = "SELECT id, username, email, 'etudiant' as role, biography, isActivated FROM etudiants WHERE id = ?";
         break;
       default:
-        return res.status(404).json({ message: "User not found" });
+        return res.status(404).json({ message: "Utilisateur non trouvé" });
     }
 
     const [rows] = await db.query(query, [req.user.id]);
     if (rows.length === 0) {
-      return res.status(404).json({ message: "User not found" });
+      return res.status(404).json({ message: "Utilisateur non trouvé" });
     }
 
     const profile = rows[0];
@@ -46,7 +46,7 @@ export const getProfile = async (req, res) => {
           coursesCompleted: completedResult[0].count || 0
         };
       } catch (statsError) {
-        console.error('Error fetching course statistics:', statsError);
+        console.error('Erreur lors de la récupération des statistiques de cours :', statsError);
         // Continue without course stats if there's an error
         courseStats = {
           coursesInProgress: 0,
@@ -138,7 +138,7 @@ export const getProfile = async (req, res) => {
           courses: coursesResult
         };
       } catch (statsError) {
-        console.error('Error fetching teacher statistics:', statsError);
+        console.error('Erreur lors de la récupération des statistiques de l\'enseignant :', statsError);
         // Continue with default stats if there's an error
         courseStats = {
           totalCoursesCreated: 0,
@@ -172,13 +172,13 @@ export const updateProfile = async (req, res) => {
 
     // Validate input - at least one field must be provided
     if ((!username || username.trim().length === 0) && (!biography || biography.trim().length === 0)) {
-      return res.status(400).json({ message: "At least username or biography must be provided" });
+      return res.status(400).json({ message: "Au moins le nom d'utilisateur ou la biographie doit être fourni" });
     }
 
     // Check if username is provided and validate it
     if (username) {
       if (username.trim().length === 0) {
-        return res.status(400).json({ message: "Username cannot be empty" });
+        return res.status(400).json({ message: "Le nom d'utilisateur ne peut pas être vide" });
       }
 
       // Check if username is already taken by another user in the appropriate table
@@ -194,13 +194,13 @@ export const updateProfile = async (req, res) => {
           existingUserQuery = "SELECT id FROM etudiants WHERE username = ? AND id != ?";
           break;
         default:
-          return res.status(400).json({ message: "Invalid user role" });
+          return res.status(400).json({ message: "Rôle utilisateur invalide" });
       }
 
       const [existingUser] = await db.query(existingUserQuery, [username, req.user.id]);
 
       if (existingUser.length > 0) {
-        return res.status(400).json({ message: "Username already taken" });
+        return res.status(400).json({ message: "Nom d'utilisateur déjà pris" });
       }
     }
 
@@ -233,12 +233,12 @@ export const updateProfile = async (req, res) => {
         updateQuery = `UPDATE etudiants SET ${updateFields.join(", ")} WHERE id = ?`;
         break;
       default:
-        return res.status(400).json({ message: "Invalid user role" });
+        return res.status(400).json({ message: "Rôle utilisateur invalide" });
     }
 
     await db.query(updateQuery, updateValues);
 
-    res.json({ message: "Profile updated successfully" });
+    res.json({ message: "Profil mis à jour avec succès" });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

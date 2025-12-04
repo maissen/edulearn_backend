@@ -1,21 +1,21 @@
 // src/middlewares/optionalAuthMiddleware.js
 import jwt from "jsonwebtoken";
 
-// Optional authentication middleware - doesn't block unauthenticated requests
+// Middleware d'authentification optionnel - ne bloque pas les requêtes non authentifiées
 export const optionalAuth = (req, res, next) => {
   const authHeader = req.header("Authorization");
-  const token = authHeader?.split(" ")[1]; // retrieves token after "Bearer "
+  const token = authHeader?.split(" ")[1]; // récupère le token après "Bearer "
 
   if (!token) {
-    // No token, continue without setting req.user
+    // Pas de token, continuer sans définir req.user
     return next();
   }
 
   try {
     const verified = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = verified; // contains { id, email, role }
+    req.user = verified; // contient { id, email, role }
   } catch (err) {
-    // Invalid token, continue without setting req.user
+    // Token invalide, continuer sans définir req.user
     req.user = null;
   }
   

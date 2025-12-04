@@ -11,16 +11,16 @@ import { isTeacherOrAdmin, isEtudiant } from "../middlewares/roleMiddleware.js";
 
 const router = express.Router();
 
-// Get the test and questions for a course
+// Obtenir le test et les questions pour un cours
 router.get("/test/course/:courseId", getTestByCourse);
 
-// Create a new test for a course (teacher only)
+// Créer un nouveau test pour un cours (enseignant uniquement)
 router.post("/test", verifyToken, isAccountActivated, isTeacherOrAdmin, createTest);
 
-// Delete a test (teacher only)
+// Supprimer un test (enseignant uniquement)
 router.delete("/test/:id", verifyToken, isAccountActivated, isTeacherOrAdmin, deleteTest);
 
-// Note: The submit test route has been moved to app.js to make it accessible at /test/submit
+// Remarque : La route de soumission du test a été déplacée vers app.js pour la rendre accessible à /test/submit
 // router.post("/test/submit", verifyToken, isAccountActivated, isEtudiant, submitTest);
 
 export default router;

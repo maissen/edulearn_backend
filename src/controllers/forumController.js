@@ -1,7 +1,7 @@
 import { db } from "../../config/db.js";
 
 export const getAllPosts = async (req, res) => {
-  // We need to join with the appropriate user table based on user_role
+  // Nous devons joindre avec la table utilisateur appropriée basée sur user_role
   const [rows] = await db.query(`
     SELECT 
       f.id, 

@@ -12,10 +12,10 @@ export default class StudentEnrollment {
     if (existing.length > 0) {
       // If already completed, don't change status
       if (existing[0].status === 'completed') {
-        throw new Error('Student has already completed this course');
+        throw new Error('L\'étudiant a déjà terminé ce cours');
       }
       // If in progress, just return success
-      return { message: 'Student already enrolled in this course' };
+      return { message: 'L\'étudiant est déjà inscrit à ce cours' };
     }
 
     // Create new enrollment
@@ -24,7 +24,7 @@ export default class StudentEnrollment {
       [etudiantId, coursId]
     );
 
-    return { message: 'Course added to in-progress list successfully' };
+    return { message: 'Cours ajouté à la liste en cours avec succès' };
   }
 
   // Mark a course as completed
@@ -36,11 +36,11 @@ export default class StudentEnrollment {
     );
 
     if (existing.length === 0) {
-      throw new Error('Student is not enrolled in this course');
+      throw new Error('L\'étudiant n\'est pas inscrit à ce cours');
     }
 
     if (existing[0].status === 'completed') {
-      throw new Error('Course is already completed');
+      throw new Error('Le cours est déjà terminé');
     }
 
     // Get the progress percentage to store in finished_courses
@@ -58,7 +58,7 @@ export default class StudentEnrollment {
       [etudiantId, coursId, progressPercentage]
     );
 
-    return { message: 'Course marked as completed successfully and moved to finished courses' };
+    return { message: 'Cours marqué comme terminé avec succès et déplacé vers les cours terminés' };
   }
 
   // Get all enrollments for a student

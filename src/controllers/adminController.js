@@ -5,7 +5,7 @@ import bcrypt from "bcryptjs";
 // Get all users (admins, teachers, students) with all details (admin only)
 export const getAllUsers = async (req, res) => {
   try {
-    logger.info('Admin requesting all users', { adminId: req.user?.id });
+    logger.info('Administrateur demandant tous les utilisateurs', { adminId: req.user?.id });
     
     // Get all admins
     const [admins] = await db.query(
@@ -28,7 +28,7 @@ export const getAllUsers = async (req, res) => {
       students
     });
   } catch (err) {
-    logger.error('Error fetching all users', { error: err.message, stack: err.stack, adminId: req.user?.id });
+    logger.error('Erreur lors de la récupération de tous les utilisateurs', { error: err.message, stack: err.stack, adminId: req.user?.id });
     res.status(500).json({ error: err.message });
   }
 };
@@ -36,7 +36,7 @@ export const getAllUsers = async (req, res) => {
 // Get statistics (counts of admins, teachers, students, tests, etc.)
 export const getStatistics = async (req, res) => {
   try {
-    logger.info('Admin requesting statistics', { adminId: req.user?.id });
+    logger.info('Administrateur demandant les statistiques', { adminId: req.user?.id });
     
     // Get count of admins
     const [adminsCount] = await db.query("SELECT COUNT(*) as count FROM admins");
@@ -65,7 +65,7 @@ export const getStatistics = async (req, res) => {
       [forumPostsCount] = await db.query("SELECT COUNT(*) as count FROM forum_posts");
     } catch (err) {
       // If forum_posts table doesn't exist, return 0
-      logger.warn('forum_posts table not found, returning 0 count', { error: err.message });
+      logger.warn('Table forum_posts non trouvée, renvoi du nombre 0', { error: err.message });
     }
     
     res.json({
@@ -85,7 +85,7 @@ export const getStatistics = async (req, res) => {
       }
     });
   } catch (err) {
-    logger.error('Error fetching statistics', { error: err.message, stack: err.stack, adminId: req.user?.id });
+    logger.error('Erreur lors de la récupération des statistiques', { error: err.message, stack: err.stack, adminId: req.user?.id });
     res.status(500).json({ error: err.message });
   }
 };
@@ -93,7 +93,7 @@ export const getStatistics = async (req, res) => {
 // Get all courses of teachers with all details (admin only)
 export const getAllTeacherCourses = async (req, res) => {
   try {
-    logger.info('Admin requesting all teacher courses', { adminId: req.user?.id });
+    logger.info('Administrateur demandant tous les cours des enseignants', { adminId: req.user?.id });
     
     // Get all teachers with their courses
     const [teachers] = await db.query(`
@@ -184,7 +184,7 @@ export const getAllTeacherCourses = async (req, res) => {
     
     res.json({ teachers });
   } catch (err) {
-    logger.error('Error fetching teacher courses', { error: err.message, stack: err.stack, adminId: req.user?.id });
+    logger.error('Erreur lors de la récupération des cours des enseignants', { error: err.message, stack: err.stack, adminId: req.user?.id });
     res.status(500).json({ error: err.message });
   }
 };
@@ -195,7 +195,7 @@ export const toggleTeacherActivation = async (req, res) => {
     const { id } = req.params;
     const { isActivated } = req.body;
     
-    logger.info('Admin toggling teacher activation', { teacherId: id, isActivated, adminId: req.user?.id });
+    logger.info('Administrateur basculant l\'activation de l\'enseignant', { teacherId: id, isActivated, adminId: req.user?.id });
     
     const [result] = await db.query(
       "UPDATE enseignants SET isActivated = ? WHERE id = ?",
@@ -203,15 +203,15 @@ export const toggleTeacherActivation = async (req, res) => {
     );
     
     if (result.affectedRows === 0) {
-      return res.status(404).json({ message: "Teacher not found" });
+      return res.status(404).json({ message: "Enseignant non trouvé" });
     }
     
     res.json({
-      message: `Teacher ${isActivated ? 'activated' : 'deactivated'} successfully`,
+      message: `Enseignant ${isActivated ? 'activé' : 'désactivé'} avec succès`,
       isActivated
     });
   } catch (err) {
-    logger.error('Error toggling teacher activation', { error: err.message, stack: err.stack, adminId: req.user?.id });
+    logger.error('Erreur lors de la bascule de l\'activation de l\'enseignant', { error: err.message, stack: err.stack, adminId: req.user?.id });
     res.status(500).json({ error: err.message });
   }
 };
@@ -222,7 +222,7 @@ export const toggleStudentActivation = async (req, res) => {
     const { id } = req.params;
     const { isActivated } = req.body;
     
-    logger.info('Admin toggling student activation', { studentId: id, isActivated, adminId: req.user?.id });
+    logger.info('Administrateur basculant l\'activation de l\'étudiant', { studentId: id, isActivated, adminId: req.user?.id });
     
     const [result] = await db.query(
       "UPDATE etudiants SET isActivated = ? WHERE id = ?",
@@ -230,15 +230,15 @@ export const toggleStudentActivation = async (req, res) => {
     );
     
     if (result.affectedRows === 0) {
-      return res.status(404).json({ message: "Student not found" });
+      return res.status(404).json({ message: "Étudiant non trouvé" });
     }
     
     res.json({
-      message: `Student ${isActivated ? 'activated' : 'deactivated'} successfully`,
+      message: `Étudiant ${isActivated ? 'activé' : 'désactivé'} avec succès`,
       isActivated
     });
   } catch (err) {
-    logger.error('Error toggling student activation', { error: err.message, stack: err.stack, adminId: req.user?.id });
+    logger.error('Erreur lors de la bascule de l\'activation de l\'étudiant', { error: err.message, stack: err.stack, adminId: req.user?.id });
     res.status(500).json({ error: err.message });
   }
 };
@@ -248,7 +248,7 @@ export const createTeacher = async (req, res) => {
   try {
     const { username, email, password, module = "General" } = req.body;
     
-    logger.info('Admin creating teacher account', { email, username, adminId: req.user?.id });
+    logger.info('Administrateur créant un compte enseignant', { email, username, adminId: req.user?.id });
     
     // Check if teacher already exists
     const [existingTeacher] = await db.query(
@@ -257,7 +257,7 @@ export const createTeacher = async (req, res) => {
     );
     
     if (existingTeacher.length > 0) {
-      return res.status(400).json({ message: "Teacher with this email already exists" });
+      return res.status(400).json({ message: "Un enseignant avec cet email existe déjà" });
     }
     
     // Hash the password before storing
@@ -275,11 +275,11 @@ export const createTeacher = async (req, res) => {
     );
     
     res.status(201).json({
-      message: "Teacher account created successfully",
+      message: "Compte enseignant créé avec succès",
       teacher: newTeacher[0]
     });
   } catch (err) {
-    logger.error('Error creating teacher account', { error: err.message, stack: err.stack, adminId: req.user?.id });
+    logger.error('Erreur lors de la création du compte enseignant', { error: err.message, stack: err.stack, adminId: req.user?.id });
     res.status(500).json({ error: err.message });
   }
 };
@@ -289,7 +289,7 @@ export const createStudent = async (req, res) => {
   try {
     const { username, email, password } = req.body;
     
-    logger.info('Admin creating student account', { email, username, adminId: req.user?.id });
+    logger.info('Administrateur créant un compte étudiant', { email, username, adminId: req.user?.id });
     
     // Check if student already exists
     const [existingStudent] = await db.query(
@@ -298,7 +298,7 @@ export const createStudent = async (req, res) => {
     );
     
     if (existingStudent.length > 0) {
-      return res.status(400).json({ message: "Student with this email already exists" });
+      return res.status(400).json({ message: "Un étudiant avec cet email existe déjà" });
     }
     
     // Hash the password before storing
@@ -316,11 +316,11 @@ export const createStudent = async (req, res) => {
     );
     
     res.status(201).json({
-      message: "Student account created successfully",
+      message: "Compte étudiant créé avec succès",
       student: newStudent[0]
     });
   } catch (err) {
-    logger.error('Error creating student account', { error: err.message, stack: err.stack, adminId: req.user?.id });
+    logger.error('Erreur lors de la création du compte étudiant', { error: err.message, stack: err.stack, adminId: req.user?.id });
     res.status(500).json({ error: err.message });
   }
 };
@@ -330,7 +330,7 @@ export const createAdmin = async (req, res) => {
   try {
     const { username, email, password } = req.body;
     
-    logger.info('Admin creating admin account', { email, username, adminId: req.user?.id });
+    logger.info('Administrateur créant un compte administrateur', { email, username, adminId: req.user?.id });
     
     // Check if admin already exists
     const [existingAdmin] = await db.query(
@@ -339,7 +339,7 @@ export const createAdmin = async (req, res) => {
     );
     
     if (existingAdmin.length > 0) {
-      return res.status(400).json({ message: "Admin with this email already exists" });
+      return res.status(400).json({ message: "Un administrateur avec cet email existe déjà" });
     }
     
     // Hash the password before storing
@@ -357,11 +357,11 @@ export const createAdmin = async (req, res) => {
     );
     
     res.status(201).json({
-      message: "Admin account created successfully",
+      message: "Compte administrateur créé avec succès",
       admin: newAdmin[0]
     });
   } catch (err) {
-    logger.error('Error creating admin account', { error: err.message, stack: err.stack, adminId: req.user?.id });
+    logger.error('Erreur lors de la création du compte administrateur', { error: err.message, stack: err.stack, adminId: req.user?.id });
     res.status(500).json({ error: err.message });
   }
 };
@@ -374,13 +374,13 @@ export const deleteTeacher = async (req, res) => {
     
     const { id } = req.params;
     
-    logger.info('Admin deleting teacher account', { teacherId: id, adminId: req.user?.id });
+    logger.info('Administrateur supprimant un compte enseignant', { teacherId: id, adminId: req.user?.id });
     
     // Check if teacher exists
     const [teacher] = await connection.query("SELECT id FROM enseignants WHERE id = ?", [id]);
     if (teacher.length === 0) {
       await connection.rollback();
-      return res.status(404).json({ message: "Teacher not found" });
+      return res.status(404).json({ message: "Enseignant non trouvé" });
     }
     
     // Delete teacher's forum posts
@@ -421,10 +421,10 @@ export const deleteTeacher = async (req, res) => {
     
     await connection.commit();
     
-    res.json({ message: "Teacher account and all related data deleted successfully" });
+    res.json({ message: "Compte enseignant et toutes les données associées supprimés avec succès" });
   } catch (err) {
     await connection.rollback();
-    logger.error('Error deleting teacher account', { error: err.message, stack: err.stack, adminId: req.user?.id });
+    logger.error('Erreur lors de la suppression du compte enseignant', { error: err.message, stack: err.stack, adminId: req.user?.id });
     res.status(500).json({ error: err.message });
   } finally {
     connection.release();
@@ -439,13 +439,13 @@ export const deleteStudent = async (req, res) => {
     
     const { id } = req.params;
     
-    logger.info('Admin deleting student account', { studentId: id, adminId: req.user?.id });
+    logger.info('Administrateur supprimant un compte étudiant', { studentId: id, adminId: req.user?.id });
     
     // Check if student exists
     const [student] = await connection.query("SELECT id FROM etudiants WHERE id = ?", [id]);
     if (student.length === 0) {
       await connection.rollback();
-      return res.status(404).json({ message: "Student not found" });
+      return res.status(404).json({ message: "Étudiant non trouvé" });
     }
     
     // Delete student's forum posts
@@ -465,10 +465,10 @@ export const deleteStudent = async (req, res) => {
     
     await connection.commit();
     
-    res.json({ message: "Student account and all related data deleted successfully" });
+    res.json({ message: "Compte étudiant et toutes les données associées supprimés avec succès" });
   } catch (err) {
     await connection.rollback();
-    logger.error('Error deleting student account', { error: err.message, stack: err.stack, adminId: req.user?.id });
+    logger.error('Erreur lors de la suppression du compte étudiant', { error: err.message, stack: err.stack, adminId: req.user?.id });
     res.status(500).json({ error: err.message });
   } finally {
     connection.release();
@@ -483,13 +483,13 @@ export const deleteCourse = async (req, res) => {
     
     const { id } = req.params;
     
-    logger.info('Admin deleting course', { courseId: id, adminId: req.user?.id });
+    logger.info('Administrateur supprimant un cours', { courseId: id, adminId: req.user?.id });
     
     // Check if course exists
     const [course] = await connection.query("SELECT id FROM cours WHERE id = ?", [id]);
     if (course.length === 0) {
       await connection.rollback();
-      return res.status(404).json({ message: "Course not found" });
+      return res.status(404).json({ message: "Cours non trouvé" });
     }
     
     // Get course tests
@@ -518,10 +518,10 @@ export const deleteCourse = async (req, res) => {
     
     await connection.commit();
     
-    res.json({ message: "Course and all related data deleted successfully" });
+    res.json({ message: "Cours et toutes les données associées supprimés avec succès" });
   } catch (err) {
     await connection.rollback();
-    logger.error('Error deleting course', { error: err.message, stack: err.stack, adminId: req.user?.id });
+    logger.error('Erreur lors de la suppression du cours', { error: err.message, stack: err.stack, adminId: req.user?.id });
     res.status(500).json({ error: err.message });
   } finally {
     connection.release();

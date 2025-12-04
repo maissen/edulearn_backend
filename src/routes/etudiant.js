@@ -24,7 +24,7 @@ router.post("/", verifyToken, isAdmin, addEtudiant);
 router.put("/:id", verifyToken, isAdmin, updateEtudiant);
 router.delete("/:id", verifyToken, isAdmin, deleteEtudiant);
 
-// Course enrollment routes for students
+// Routes d'inscription aux cours pour les étudiants
 router.get("/courses/in-progress", verifyToken, isAccountActivated, isEtudiant, getCoursesInProgress);
 router.get("/courses/completed", verifyToken, isAccountActivated, isEtudiant, getCompletedCourses);
 router.get("/test-results", verifyToken, isAccountActivated, isEtudiant, getStudentTestResults);

@@ -52,8 +52,8 @@ export const getTeacherTests = async (req, res) => {
     
     res.json(tests);
   } catch (error) {
-    console.error('Error fetching teacher tests:', error);
-    res.status(500).json({ error: 'Failed to fetch teacher tests' });
+    console.error('Erreur lors de la récupération des tests de l\'enseignant:', error);
+    res.status(500).json({ error: 'Échec de la récupération des tests de l\'enseignant' });
   }
 };
 

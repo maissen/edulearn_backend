@@ -8,13 +8,13 @@ export const registerStudent = async (req, res) => {
   const { username, email, password } = req.body;
 
   try {
-    logger.info('Student registration attempt', { email });
+    logger.info('Tentative d\'inscription d\'un étudiant', { email });
     
     // Check if student already exists in etudiants table
     const [existingStudent] = await db.query("SELECT * FROM etudiants WHERE email = ?", [email]);
     if (existingStudent.length > 0) {
-      logger.warn('Student registration failed - email already exists', { email });
-      return res.status(400).json({ message: "Email already exists" });
+      logger.warn('Échec de l\'inscription de l\'étudiant - email déjà existant', { email });
+      return res.status(400).json({ message: "L'email existe déjà" });
     }
 
     const hashed = await bcrypt.hash(password, 10);
@@ -25,10 +25,10 @@ export const registerStudent = async (req, res) => {
       [username, email, hashed, 1, true] // Default to class ID 1 and activated status true
     );
 
-    logger.info('Student registered successfully', { email, username });
-    res.json({ message: "Student registered successfully" });
+    logger.info('Étudiant inscrit avec succès', { email, username });
+    res.json({ message: "Étudiant inscrit avec succès" });
   } catch (err) {
-    logger.error('Student registration error', { error: err.message, stack: err.stack });
+    logger.error('Erreur lors de l\'inscription de l\'étudiant', { error: err.message, stack: err.stack });
     res.status(500).json({ error: err.message });
   }
 };
@@ -38,13 +38,13 @@ export const registerTeacher = async (req, res) => {
   const { username, email, password } = req.body;
 
   try {
-    logger.info('Teacher registration attempt', { email });
+    logger.info('Tentative d\'inscription d\'un enseignant', { email });
     
     // Check if teacher already exists in enseignants table
     const [existingTeacher] = await db.query("SELECT * FROM enseignants WHERE email = ?", [email]);
     if (existingTeacher.length > 0) {
-      logger.warn('Teacher registration failed - email already exists', { email });
-      return res.status(400).json({ message: "Email already exists" });
+      logger.warn('Échec de l\'inscription de l\'enseignant - email déjà existant', { email });
+      return res.status(400).json({ message: "L'email existe déjà" });
     }
 
     const hashed = await bcrypt.hash(password, 10);
@@ -55,10 +55,10 @@ export const registerTeacher = async (req, res) => {
       [username, email, hashed, "General", true]
     );
 
-    logger.info('Teacher registered successfully', { email, username });
-    res.json({ message: "Teacher registered successfully" });
+    logger.info('Enseignant inscrit avec succès', { email, username });
+    res.json({ message: "Enseignant inscrit avec succès" });
   } catch (err) {
-    logger.error('Teacher registration error', { error: err.message, stack: err.stack });
+    logger.error('Erreur lors de l\'inscription de l\'enseignant', { error: err.message, stack: err.stack });
     res.status(500).json({ error: err.message });
   }
 };
@@ -68,13 +68,13 @@ export const registerAdmin = async (req, res) => {
   const { username, email, password } = req.body;
 
   try {
-    logger.info('Admin registration attempt', { email });
+    logger.info('Tentative d\'inscription d\'un administrateur', { email });
     
     // Check if admin already exists in admins table
     const [existingAdmin] = await db.query("SELECT * FROM admins WHERE email = ?", [email]);
     if (existingAdmin.length > 0) {
-      logger.warn('Admin registration failed - email already exists', { email });
-      return res.status(400).json({ message: "Email already exists" });
+      logger.warn('Échec de l\'inscription de l\'administrateur - email déjà existant', { email });
+      return res.status(400).json({ message: "L'email existe déjà" });
     }
 
     const hashed = await bcrypt.hash(password, 10);
@@ -85,10 +85,10 @@ export const registerAdmin = async (req, res) => {
       [username, email, hashed]
     );
 
-    logger.info('Admin registered successfully', { email, username });
-    res.json({ message: "Admin registered successfully" });
+    logger.info('Administrateur inscrit avec succès', { email, username });
+    res.json({ message: "Administrateur inscrit avec succès" });
   } catch (err) {
-    logger.error('Admin registration error', { error: err.message, stack: err.stack });
+    logger.error('Erreur lors de l\'inscription de l\'administrateur', { error: err.message, stack: err.stack });
     res.status(500).json({ error: err.message });
   }
 };
@@ -98,7 +98,7 @@ const performLogin = async (req, res, tableName, role) => {
   const { email, password } = req.body;
 
   try {
-    logger.info(`${role} login attempt`, { email, role });
+    logger.info(`Tentative de connexion ${role}`, { email, role });
     
     let user = null;
     let query = "";
@@ -115,28 +115,28 @@ const performLogin = async (req, res, tableName, role) => {
         query = "SELECT id, username, email, password FROM admins WHERE email = ?";
         break;
       default:
-        logger.error('Invalid table for login', { tableName });
-        return res.status(500).json({ message: "Invalid table for login" });
+        logger.error('Table invalide pour la connexion', { tableName });
+        return res.status(500).json({ message: "Table invalide pour la connexion" });
     }
 
     const [rows] = await db.query(query, [email]);
     if (rows.length === 0) {
-      logger.warn('Login failed - user not found', { email, role });
-      return res.status(400).json({ message: "User not found" });
+      logger.warn('Échec de la connexion - utilisateur non trouvé', { email, role });
+      return res.status(400).json({ message: "Utilisateur non trouvé" });
     }
 
     user = rows[0];
 
     // Check if user is deactivated (admins don't have isActivated field)
     if (user.hasOwnProperty('isActivated') && user.isActivated === false) {
-      logger.warn('Login failed - account deactivated', { email, role });
-      return res.status(403).json({ message: "Account is deactivated. Please contact administrator." });
+      logger.warn('Échec de la connexion - compte désactivé', { email, role });
+      return res.status(403).json({ message: "Le compte est désactivé. Veuillez contacter l'administrateur." });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      logger.warn('Login failed - invalid credentials', { email, role });
-      return res.status(400).json({ message: "Invalid credentials" });
+      logger.warn('Échec de la connexion - identifiants invalides', { email, role });
+      return res.status(400).json({ message: "Identifiants invalides" });
     }
 
     const expiresIn = "70d";
@@ -147,7 +147,7 @@ const performLogin = async (req, res, tableName, role) => {
     // Calculate expiration date (70 days from now)
     const expirationDate = Math.floor(Date.now() / 1000) + (70 * 24 * 60 * 60);
 
-    logger.info(`${role} login successful`, { email, userId: user.id, role });
+    logger.info(`Connexion ${role} réussie`, { email, userId: user.id, role });
     res.json({ 
       token, 
       expiration_date: expirationDate,
@@ -159,7 +159,7 @@ const performLogin = async (req, res, tableName, role) => {
       }
     });
   } catch (err) {
-    logger.error(`${role} login error`, { error: err.message, stack: err.stack });
+    logger.error(`Erreur de connexion ${role}`, { error: err.message, stack: err.stack });
     res.status(500).json({ error: err.message });
   }
 };

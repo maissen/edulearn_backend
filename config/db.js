@@ -12,9 +12,9 @@ export const db = mysql2.createPool({
 export const connectDB = async () => {
   try {
     await db.getConnection();
-    console.log("📌 MySQL Connected");
+    console.log("📌 MySQL Connecté");
   } catch (err) {
-    console.error("❌ MySQL Error:", err.message);
+    console.error("❌ Erreur MySQL:", err.message);
     process.exit(1);
   }
 };

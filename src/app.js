@@ -14,7 +14,7 @@ import examenRoutes from "./routes/examen.js";
 import quizRoutes from "./routes/quiz.js";
 import questionRoutes from "./routes/question.js";
 import adminRoutes from "./routes/admin.js";
-// Import the submitTest controller function directly
+// Importer la fonction de contrôleur submitTest directement
 import { submitTest } from "./controllers/quizController.js";
 import { verifyToken } from "./middlewares/authMiddleware.js";
 import { isAccountActivated } from "./middlewares/activationMiddleware.js";
@@ -23,10 +23,10 @@ import { isEtudiant } from "./middlewares/roleMiddleware.js";
 const app = express();
 
 app.use(cors({
-  origin: '*', // Allow all origins
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'], // Allow all HTTP methods
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'], // Allow common headers
-  credentials: true // Allow credentials if needed
+  origin: '*', // Autoriser toutes les origines
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'], // Autoriser toutes les méthodes HTTP
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'], // Autoriser les en-têtes courants
+  credentials: true // Autoriser les identifiants si nécessaire
 }));
 app.use(express.json());
 app.use("/uploads", express.static("src/uploads"));
@@ -46,7 +46,7 @@ app.use("/quiz", quizRoutes);
 app.use("/question", questionRoutes);
 app.use("/admin", adminRoutes);
 
-// Add the test submit route directly to make it accessible at /test/submit
+// Ajouter la route de soumission du test directement pour la rendre accessible à /test/submit
 app.post("/test/submit", verifyToken, isAccountActivated, isEtudiant, submitTest);
 
 export default app;

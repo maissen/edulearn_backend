@@ -30,7 +30,7 @@ export default class TestResult {
     
     // If student has already passed the test, prevent new submissions
     if (existingRows.length > 0 && existingRows[0].score > 12) {
-      throw new Error("Test already passed by this student (score > 12)");
+      throw new Error("Test déjà passé par cet étudiant (note > 12)");
     }
     
     // If student hasn't passed yet, allow them to retake the test

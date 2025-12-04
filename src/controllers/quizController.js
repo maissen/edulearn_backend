@@ -129,23 +129,23 @@ export const submitTest = async (req, res) => {
     const userId = req.user.id;
     const userEmail = req.user.email;
     
-    logger.info('Processing test submission', { userId, userEmail });
+    logger.info('Traitement de la soumission du test', { userId, userEmail });
     
     // Look up the student ID using the email (email is unique and should match between users and etudiants tables)
     const student = await Etudiant.findByEmail(userEmail);
     if (!student) {
-      logger.error('Student not found for test submission', { userEmail, userId });
-      return res.status(400).json({ error: `Student record not found for email: ${userEmail}` });
+      logger.error('Étudiant non trouvé pour la soumission du test', { userEmail, userId });
+      return res.status(400).json({ error: `Enregistrement de l'étudiant non trouvé pour l'email : ${userEmail}` });
     }
     
-    logger.debug('Found student for test submission', { studentId: student.id, userEmail });
+    logger.debug('Étudiant trouvé pour la soumission du test', { studentId: student.id, userEmail });
     
     const etudiantId = student.id;
     const { testID, submissions } = req.body;
     
     if (!testID || !Array.isArray(submissions) || submissions.length === 0) {
-      logger.warn('Invalid test submission - missing required fields');
-      return res.status(400).json({ error: "testID and non-empty submissions are required" });
+      logger.warn('Soumission de test invalide - champs requis manquants');
+      return res.status(400).json({ error: "testID et soumissions non vides sont requis" });
     }
     
     const result = await TestResult.submitTest(etudiantId, testID, submissions);
@@ -163,22 +163,22 @@ export const submitTest = async (req, res) => {
         try {
           // Complete the course for the student
           await StudentEnrollment.completeCourse(etudiantId, courseId);
-          logger.info('Course automatically completed due to high test score', { courseId, studentId: etudiantId, score: result.score });
+          logger.info('Cours automatiquement complété en raison du score élevé au test', { courseId, studentId: etudiantId, score: result.score });
         } catch (completionError) {
-          logger.error('Error automatically completing course', { error: completionError.message, stack: completionError.stack, courseId, studentId: etudiantId });
+          logger.error('Erreur lors de la complétion automatique du cours', { error: completionError.message, stack: completionError.stack, courseId, studentId: etudiantId });
           // Don't fail the test submission if course completion fails
         }
       }
     }
     
-    logger.info('Test submission successful', { testID, studentId: etudiantId, score: result.score });
-    res.json({ message: "Submission successful", result });
+    logger.info('Soumission du test réussie', { testID, studentId: etudiantId, score: result.score });
+    res.json({ message: "Soumission réussie", result });
   } catch (error) {
     if (error.message.includes("already passed")) {
-      logger.warn('Test already passed by student', { error: error.message });
+      logger.warn('Test déjà passé par l\'étudiant', { error: error.message });
       return res.status(409).json({ error: error.message });
     }
-    logger.error('Error submitting test', { error: error.message, stack: error.stack });
+    logger.error('Erreur lors de la soumission du test', { error: error.message, stack: error.stack });
     res.status(500).json({ error: error.message });
   }
 };

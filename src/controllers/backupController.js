@@ -38,7 +38,7 @@ function formatBytes(bytes, decimals = 2) {
 // Create database backup using mysqldump via network connection
 export const createBackup = async (req, res) => {
   try {
-    logger.info('Admin requesting database backup', { adminId: req.user?.id });
+    logger.info('Administrateur demandant une sauvegarde de la base de données', { adminId: req.user?.id });
     
     // Ensure backups directory exists
     const backupsDir = await ensureBackupsDirectory();
@@ -55,7 +55,7 @@ export const createBackup = async (req, res) => {
     
     // Validate environment variables
     if (!DB_HOST || !DB_USER || !DB_PASSWORD || !DB_NAME) {
-      logger.error('Missing database environment variables for backup', { 
+      logger.error('Variables d\'environnement de base de données manquantes pour la sauvegarde', { 
         DB_HOST: !!DB_HOST, 
         DB_USER: !!DB_USER, 
         DB_PASSWORD: !!DB_PASSWORD, 
@@ -63,7 +63,7 @@ export const createBackup = async (req, res) => {
       });
       return res.status(500).json({ 
         success: false, 
-        error: 'Missing database configuration' 
+        error: 'Configuration de base de données manquante' 
       });
     }
     
@@ -72,7 +72,7 @@ export const createBackup = async (req, res) => {
     // Method 1: Try using mysqldump if available in the container
     const dumpCommand = `mysqldump --single-transaction --routines --triggers --set-gtid-purged=OFF -h ${DB_HOST} -P ${port} -u ${DB_USER} -p'${DB_PASSWORD}' ${DB_NAME} > "${filepath}"`;
     
-    logger.info('Attempting database backup with mysqldump', { 
+    logger.info('Tentative de sauvegarde de la base de données avec mysqldump', { 
       command: dumpCommand.replace(DB_PASSWORD, '****'),
       filename 
     });
@@ -90,11 +90,11 @@ export const createBackup = async (req, res) => {
       const stats = await fs.stat(filepath);
       if (stats.size > 0) {
         backupSuccess = true;
-        logger.info('Backup created with mysqldump', { size: stats.size });
+        logger.info('Sauvegarde créée avec mysqldump', { size: stats.size });
       }
       
     } catch (execErr) {
-      logger.warn('mysqldump not available or failed, trying alternative method', { 
+      logger.warn('mysqldump non disponible ou échec, tentative de méthode alternative', { 
         error: execErr.message
       });
       
@@ -104,10 +104,10 @@ export const createBackup = async (req, res) => {
         const stats = await fs.stat(filepath);
         if (stats.size > 0) {
           backupSuccess = true;
-          logger.info('Backup created with manual method', { size: stats.size });
+          logger.info('Sauvegarde créée avec la méthode manuelle', { size: stats.size });
         }
       } catch (manualErr) {
-        logger.error('Manual backup also failed', { error: manualErr.message });
+        logger.error('La sauvegarde manuelle a également échoué', { error: manualErr.message });
         throw manualErr;
       }
     }
@@ -115,7 +115,7 @@ export const createBackup = async (req, res) => {
     if (!backupSuccess) {
       return res.status(500).json({ 
         success: false, 
-        error: 'Failed to create backup with any method'
+        error: 'Échec de la création de la sauvegarde avec toutes les méthodes'
       });
     }
     
@@ -129,9 +129,9 @@ export const createBackup = async (req, res) => {
       // Remove uncompressed file
       await fs.unlink(filepath);
       
-      logger.info('Backup compressed successfully');
+      logger.info('Sauvegarde compressée avec succès');
     } catch (gzipErr) {
-      logger.warn('Failed to compress backup, keeping uncompressed version', { 
+      logger.warn('Échec de la compression de la sauvegarde, conservation de la version non compressée', { 
         error: gzipErr.message 
       });
       // If compression fails, rename the uncompressed file
@@ -151,15 +151,15 @@ export const createBackup = async (req, res) => {
     const finalFilename = path.basename(finalFilepath);
     
     if (stats.size === 0) {
-      logger.warn('Created backup file is empty', { filename: finalFilename, filepath: finalFilepath });
+      logger.warn('Le fichier de sauvegarde créé est vide', { filename: finalFilename, filepath: finalFilepath });
       return res.status(500).json({ 
         success: false, 
-        error: 'Backup file is empty',
-        details: 'The backup completed but resulted in an empty file'
+        error: 'Le fichier de sauvegarde est vide',
+        details: 'La sauvegarde est terminée mais a abouti à un fichier vide'
       });
     }
     
-    logger.info('Database backup created successfully', { 
+    logger.info('Sauvegarde de la base de données créée avec succès', { 
       filename: finalFilename, 
       size: stats.size,
       sizeFormatted: formatBytes(stats.size),
@@ -168,7 +168,7 @@ export const createBackup = async (req, res) => {
     
     res.json({
       success: true,
-      message: 'Backup created successfully',
+      message: 'Sauvegarde créée avec succès',
       filename: finalFilename,
       size: stats.size,
       sizeFormatted: formatBytes(stats.size),
@@ -176,7 +176,7 @@ export const createBackup = async (req, res) => {
     });
     
   } catch (err) {
-    logger.error('Error creating database backup', { 
+    logger.error('Erreur lors de la création de la sauvegarde de la base de données', { 
       error: err.message, 
       stack: err.stack,
       adminId: req.user?.id 
@@ -184,7 +184,7 @@ export const createBackup = async (req, res) => {
     
     res.status(500).json({ 
       success: false, 
-      error: 'Failed to create backup',
+      error: 'Échec de la création de la sauvegarde',
       message: err.message 
     });
   }
@@ -200,8 +200,8 @@ async function createBackupManually(filepath, host, port, user, password, databa
     database
   });
   
-  let sqlDump = `-- MySQL dump created at ${new Date().toISOString()}\n`;
-  sqlDump += `-- Host: ${host}    Database: ${database}\n`;
+  let sqlDump = `-- Sauvegarde MySQL créée le ${new Date().toISOString()}\n`;
+  sqlDump += `-- Hôte: ${host}    Base de données: ${database}\n`;
   sqlDump += `-- ------------------------------------------------------\n\n`;
   sqlDump += `SET NAMES utf8mb4;\n`;
   sqlDump += `SET FOREIGN_KEY_CHECKS=0;\n\n`;
@@ -215,7 +215,7 @@ async function createBackupManually(filepath, host, port, user, password, databa
       
       // Get CREATE TABLE statement
       const [createTable] = await connection.query(`SHOW CREATE TABLE \`${tableName}\``);
-      sqlDump += `-- Table structure for table \`${tableName}\`\n`;
+      sqlDump += `-- Structure de la table \`${tableName}\`\n`;
       sqlDump += `DROP TABLE IF EXISTS \`${tableName}\`;\n`;
       sqlDump += createTable[0]['Create Table'] + ';\n\n';
       
@@ -223,7 +223,7 @@ async function createBackupManually(filepath, host, port, user, password, databa
       const [rows] = await connection.query(`SELECT * FROM \`${tableName}\``);
       
       if (rows.length > 0) {
-        sqlDump += `-- Dumping data for table \`${tableName}\`\n`;
+        sqlDump += `-- Données de la table \`${tableName}\`\n`;
         sqlDump += `LOCK TABLES \`${tableName}\` WRITE;\n`;
         
         for (const row of rows) {
@@ -255,7 +255,7 @@ async function createBackupManually(filepath, host, port, user, password, databa
 // List available backups
 export const listBackups = async (req, res) => {
   try {
-    logger.info('Admin requesting list of backups', { adminId: req.user?.id });
+    logger.info('Administrateur demandant la liste des sauvegardes', { adminId: req.user?.id });
     
     const backupsDir = path.join(process.cwd(), 'backups');
     
@@ -264,7 +264,7 @@ export const listBackups = async (req, res) => {
     } catch (err) {
       if (err.code === 'ENOENT') {
         await fs.mkdir(backupsDir, { recursive: true });
-        logger.info('Backups directory created', { adminId: req.user?.id });
+        logger.info('Répertoire des sauvegardes créé', { adminId: req.user?.id });
       } else {
         throw err;
       }
@@ -288,14 +288,14 @@ export const listBackups = async (req, res) => {
     
     backups.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     
-    logger.info('Backups listed successfully', { count: backups.length, adminId: req.user?.id });
+    logger.info('Sauvegardes listées avec succès', { count: backups.length, adminId: req.user?.id });
     
     res.json({
       success: true,
       backups
     });
   } catch (err) {
-    logger.error('Error listing backups', { 
+    logger.error('Erreur lors du listing des sauvegardes', { 
       error: err.message, 
       stack: err.stack,
       adminId: req.user?.id 
@@ -303,7 +303,7 @@ export const listBackups = async (req, res) => {
     
     res.status(500).json({ 
       success: false, 
-      error: 'Failed to list backups',
+      error: 'Échec du listing des sauvegardes',
       message: err.message 
     });
   }
@@ -314,21 +314,21 @@ export const downloadBackup = async (req, res) => {
   try {
     const { filename } = req.params;
     
-    logger.info('Admin downloading backup', { filename, adminId: req.user?.id });
+    logger.info('Administrateur téléchargeant une sauvegarde', { filename, adminId: req.user?.id });
     
     if (!filename || filename.includes('../') || filename.includes('/')) {
-      logger.warn('Invalid backup filename', { filename, adminId: req.user?.id });
+      logger.warn('Nom de fichier de sauvegarde invalide', { filename, adminId: req.user?.id });
       return res.status(400).json({ 
         success: false, 
-        error: 'Invalid filename' 
+        error: 'Nom de fichier invalide' 
       });
     }
     
     if (!filename.endsWith('.sql.gz') && !filename.endsWith('.sql')) {
-      logger.warn('Invalid backup filename extension', { filename, adminId: req.user?.id });
+      logger.warn('Extension de nom de fichier de sauvegarde invalide', { filename, adminId: req.user?.id });
       return res.status(400).json({ 
         success: false, 
-        error: 'Invalid filename extension' 
+        error: 'Extension de nom de fichier invalide' 
       });
     }
     
@@ -337,10 +337,10 @@ export const downloadBackup = async (req, res) => {
     try {
       await fs.access(filepath);
     } catch (err) {
-      logger.warn('Backup file not found', { filename, adminId: req.user?.id });
+      logger.warn('Fichier de sauvegarde introuvable', { filename, adminId: req.user?.id });
       return res.status(404).json({ 
         success: false, 
-        error: 'Backup file not found' 
+        error: 'Fichier de sauvegarde introuvable' 
       });
     }
     
@@ -350,7 +350,7 @@ export const downloadBackup = async (req, res) => {
     
     res.sendFile(filepath);
   } catch (err) {
-    logger.error('Error downloading backup', { 
+    logger.error('Erreur lors du téléchargement de la sauvegarde', { 
       error: err.message, 
       stack: err.stack,
       filename: req.params.filename,
@@ -359,7 +359,7 @@ export const downloadBackup = async (req, res) => {
     
     res.status(500).json({ 
       success: false, 
-      error: 'Failed to download backup',
+      error: 'Échec du téléchargement de la sauvegarde',
       message: err.message 
     });
   }
@@ -370,21 +370,21 @@ export const deleteBackup = async (req, res) => {
   try {
     const { filename } = req.params;
     
-    logger.info('Admin deleting backup', { filename, adminId: req.user?.id });
+    logger.info('Administrateur supprimant une sauvegarde', { filename, adminId: req.user?.id });
     
     if (!filename || filename.includes('../') || filename.includes('/')) {
-      logger.warn('Invalid backup filename', { filename, adminId: req.user?.id });
+      logger.warn('Nom de fichier de sauvegarde invalide', { filename, adminId: req.user?.id });
       return res.status(400).json({ 
         success: false, 
-        error: 'Invalid filename' 
+        error: 'Nom de fichier invalide' 
       });
     }
     
     if (!filename.endsWith('.sql.gz') && !filename.endsWith('.sql')) {
-      logger.warn('Invalid backup filename extension', { filename, adminId: req.user?.id });
+      logger.warn('Extension de nom de fichier de sauvegarde invalide', { filename, adminId: req.user?.id });
       return res.status(400).json({ 
         success: false, 
-        error: 'Invalid filename extension' 
+        error: 'Extension de nom de fichier invalide' 
       });
     }
     
@@ -393,23 +393,23 @@ export const deleteBackup = async (req, res) => {
     try {
       await fs.access(filepath);
     } catch (err) {
-      logger.warn('Backup file not found', { filename, adminId: req.user?.id });
+      logger.warn('Fichier de sauvegarde introuvable', { filename, adminId: req.user?.id });
       return res.status(404).json({ 
         success: false, 
-        error: 'Backup file not found' 
+        error: 'Fichier de sauvegarde introuvable' 
       });
     }
     
     await fs.unlink(filepath);
     
-    logger.info('Backup deleted successfully', { filename, adminId: req.user?.id });
+    logger.info('Sauvegarde supprimée avec succès', { filename, adminId: req.user?.id });
     
     res.json({
       success: true,
-      message: 'Backup deleted successfully'
+      message: 'Sauvegarde supprimée avec succès'
     });
   } catch (err) {
-    logger.error('Error deleting backup', { 
+    logger.error('Erreur lors de la suppression de la sauvegarde', { 
       error: err.message, 
       stack: err.stack,
       filename: req.params.filename,
@@ -418,7 +418,7 @@ export const deleteBackup = async (req, res) => {
     
     res.status(500).json({ 
       success: false, 
-      error: 'Failed to delete backup',
+      error: 'Échec de la suppression de la sauvegarde',
       message: err.message 
     });
   }

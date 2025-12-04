@@ -43,7 +43,7 @@ export const startCourse = async (req, res) => {
     const result = await StudentEnrollment.enrollStudent(etudiantId, coursId);
     res.json(result);
   } catch (error) {
-    console.error('Error starting course:', error);
+    console.error('Erreur lors du démarrage du cours:', error);
     res.status(400).json({ error: error.message });
   }
 };
@@ -56,7 +56,7 @@ export const completeCourse = async (req, res) => {
     const result = await StudentEnrollment.completeCourse(etudiantId, coursId);
     res.json(result);
   } catch (error) {
-    console.error('Error completing course:', error);
+    console.error('Erreur lors de l\'achèvement du cours:', error);
     res.status(400).json({ error: error.message });
   }
 };
@@ -87,8 +87,8 @@ export const getCoursesInProgress = async (req, res) => {
 
     res.json(rows);
   } catch (error) {
-    console.error('Error fetching courses in progress:', error);
-    res.status(500).json({ error: 'Failed to fetch courses in progress' });
+    console.error('Erreur lors de la récupération des cours en cours:', error);
+    res.status(500).json({ error: 'Échec de la récupération des cours en cours' });
   }
 };
 
@@ -118,8 +118,8 @@ export const getCompletedCourses = async (req, res) => {
 
     res.json(rows);
   } catch (error) {
-    console.error('Error fetching completed courses:', error);
-    res.status(500).json({ error: 'Failed to fetch completed courses' });
+    console.error('Erreur lors de la récupération des cours terminés:', error);
+    res.status(500).json({ error: 'Échec de la récupération des cours terminés' });
   }
 };
 
@@ -185,8 +185,8 @@ export const checkEnrollmentStatus = async (req, res) => {
       completedAt: enrollment.completed_at
     });
   } catch (error) {
-    console.error('Error checking enrollment status:', error);
-    res.status(500).json({ error: 'Failed to check enrollment status' });
+    console.error('Erreur lors de la vérification du statut d\'inscription:', error);
+    res.status(500).json({ error: 'Échec de la vérification du statut d\'inscription' });
   }
 };
 
@@ -209,8 +209,8 @@ export const checkCompletionStatus = async (req, res) => {
       completedAt: rows.length > 0 ? rows[0].completed_at : null
     });
   } catch (error) {
-    console.error('Error checking completion status:', error);
-    res.status(500).json({ error: 'Failed to check completion status' });
+    console.error('Erreur lors de la vérification du statut d\'achèvement:', error);
+    res.status(500).json({ error: 'Échec de la vérification du statut d\'achèvement' });
   }
 };
 
@@ -220,7 +220,7 @@ export const getStudentTestResults = async (req, res) => {
     const testResults = await TestResult.getStudentTestResults(etudiantId);
     res.json(testResults);
   } catch (error) {
-    console.error('Error fetching student test results:', error);
-    res.status(500).json({ error: 'Failed to fetch test results' });
+    console.error('Erreur lors de la récupération des résultats des tests de l\'étudiant:', error);
+    res.status(500).json({ error: 'Échec de la récupération des résultats des tests' });
   }
 };

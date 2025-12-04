@@ -99,7 +99,7 @@ export default class User {
         params = [username, email, password, 1, isActivated]; // Default to class ID 1
         break;
       default:
-        throw new Error("Invalid user role");
+        throw new Error("Rôle utilisateur invalide");
     }
 
     await db.query(query, params);

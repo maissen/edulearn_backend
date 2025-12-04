@@ -7,17 +7,17 @@ export const verifyToken = (req, res, next) => {
   const token = authHeader?.split(" ")[1]; // récupère le token après "Bearer "
 
   if (!token) {
-    logger.warn('Access denied - missing token', { ip: req.ip, url: req.originalUrl });
+    logger.warn('Accès refusé - token manquant', { ip: req.ip, url: req.originalUrl });
     return res.status(401).json({ message: "Accès refusé. Token manquant." });
   }
 
   try {
     const verified = jwt.verify(token, process.env.JWT_SECRET);
     req.user = verified; // contient { id, email, role }
-    logger.info('Token verified successfully', { userId: verified.id, role: verified.role, url: req.originalUrl });
+    logger.info('Token vérifié avec succès', { userId: verified.id, role: verified.role, url: req.originalUrl });
     next();
   } catch (err) {
-    logger.warn('Invalid token', { error: err.message, ip: req.ip, url: req.originalUrl });
+    logger.warn('Token invalide', { error: err.message, ip: req.ip, url: req.originalUrl });
     res.status(400).json({ message: "Token invalide." });
   }
 };

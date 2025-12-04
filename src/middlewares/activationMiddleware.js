@@ -7,11 +7,11 @@ export const isAccountActivated = async (req, res, next) => {
   try {
     const { id, role } = req.user;
     
-    logger.info('Checking account activation status', { userId: id, role });
+    logger.info('Vérification du statut d\'activation du compte', { userId: id, role });
     
     // Admins don't have activation status
     if (role === "admin") {
-      logger.debug('Admin user bypassing activation check', { userId: id });
+      logger.debug('Utilisateur administrateur contournant la vérification d\'activation', { userId: id });
       return next();
     }
     
@@ -24,26 +24,26 @@ export const isAccountActivated = async (req, res, next) => {
         query = "SELECT isActivated FROM etudiants WHERE id = ?";
         break;
       default:
-        logger.warn('Invalid user role for activation check', { userId: id, role });
-        return res.status(403).json({ message: "Invalid user role" });
+        logger.warn('Rôle utilisateur invalide pour la vérification d\'activation', { userId: id, role });
+        return res.status(403).json({ message: "Rôle utilisateur invalide" });
     }
     
     const [rows] = await db.query(query, [id]);
     if (rows.length === 0) {
-      logger.warn('User not found during activation check', { userId: id, role });
-      return res.status(404).json({ message: "User not found" });
+      logger.warn('Utilisateur non trouvé lors de la vérification d\'activation', { userId: id, role });
+      return res.status(404).json({ message: "Utilisateur non trouvé" });
     }
     
     const user = rows[0];
     if (!user.isActivated) {
-      logger.warn('Account deactivated', { userId: id, role });
-      return res.status(403).json({ message: "Account is deactivated. Please contact administrator." });
+      logger.warn('Compte désactivé', { userId: id, role });
+      return res.status(403).json({ message: "Le compte est désactivé. Veuillez contacter l'administrateur." });
     }
     
-    logger.info('Account is activated', { userId: id, role });
+    logger.info('Le compte est activé', { userId: id, role });
     next();
   } catch (err) {
-    logger.error('Error checking account activation', { error: err.message, stack: err.stack, userId: req.user?.id, role: req.user?.role });
+    logger.error('Erreur lors de la vérification de l\'activation du compte', { error: err.message, stack: err.stack, userId: req.user?.id, role: req.user?.role });
     res.status(500).json({ error: err.message });
   }
 };

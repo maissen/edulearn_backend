@@ -26,7 +26,7 @@ router.get("/recent", getRecentCourses);
 router.get("/categories", getCourseCategories);
 router.get("/grouped-by-category", getCoursesGroupedByCategory);
 router.get("/:id", getCoursById);
-// Use optional authentication so both authenticated and unauthenticated users can access course content
+// Utiliser l'authentification optionnelle pour que les utilisateurs authentifiés et non authentifiés puissent accéder au contenu du cours
 router.get("/:id/content", optionalAuth, getCourseContent);
 router.get("/:id/related", getRelatedCourses);
 
