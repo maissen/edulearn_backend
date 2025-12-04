@@ -466,7 +466,7 @@ Authorization: Bearer <token>
 ```
 - **Success:** 200 OK
 - **Response:**
-```json
+``json
 {
   "message": "Cours ajouté"
 }
@@ -950,7 +950,7 @@ Authorization: Bearer <token>
 ```
 - **Success:** 200 OK
 - **Response:**
-```json
+``json
 {
   "message": "Course marked as completed successfully and moved to finished courses"
 }
@@ -1253,7 +1253,7 @@ Authorization: Bearer <token>
 - **Auth:** enseignant only
 - **Success:** 200 OK
 - **Response:**
-```json
+``json
 {
   "message": "Test deleted"
 }
@@ -1416,12 +1416,27 @@ Success:
 }
 ```
 
-If already submitted:
+If already passed (score > 12):
 ```
 {
-  "error": "Test already submitted by this student"
+  "error": "Test already passed by this student (score > 12)"
 }
 ```
+If already submitted but not passed:
+```
+{
+  "message": "Submission successful",
+  "result": {
+    "id": 456,
+    "score": 8.00,
+    "totalQuestions": 5,
+    "correctAnswers": 2,
+    "maxScore": 20,
+    "pointsPerQuestion": 4.00
+  }
+}
+```
+
 If malformed:
 ```
 { "error": "testID and non-empty submissions are required" }

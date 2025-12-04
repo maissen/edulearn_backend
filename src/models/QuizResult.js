@@ -21,18 +21,32 @@ export default class TestResult {
     const totalQuestions = questions.length;
     const pointsPerQuestion = totalQuestions > 0 ? 20 / totalQuestions : 0;
     const score = Math.round(correct * pointsPerQuestion * 100) / 100;
-    // Only one attempt per student per test
+    
+    // Check if student has already passed this test (score > 12)
     const [existingRows] = await db.query(
-      "SELECT id FROM test_results WHERE etudiant_id = ? AND test_id = ?",
+      "SELECT score FROM test_results WHERE etudiant_id = ? AND test_id = ? ORDER BY score DESC LIMIT 1",
       [etudiantId, testID]
     );
-    if (existingRows.length > 0) {
-      throw new Error("Test already submitted by this student");
+    
+    // If student has already passed the test, prevent new submissions
+    if (existingRows.length > 0 && existingRows[0].score > 12) {
+      throw new Error("Test already passed by this student (score > 12)");
     }
+    
+    // If student hasn't passed yet, allow them to retake the test
+    // We'll replace the existing record with the new one
     const [result] = await db.query(
-      "INSERT INTO test_results (etudiant_id, test_id, score, total_questions, correct_answers, responses) VALUES (?, ?, ?, ?, ?, ?)",
+      `INSERT INTO test_results (etudiant_id, test_id, score, total_questions, correct_answers, responses) 
+       VALUES (?, ?, ?, ?, ?, ?)
+       ON DUPLICATE KEY UPDATE 
+       score = VALUES(score),
+       total_questions = VALUES(total_questions),
+       correct_answers = VALUES(correct_answers),
+       responses = VALUES(responses),
+       submitted_at = CURRENT_TIMESTAMP`,
       [etudiantId, testID, score, totalQuestions, correct, JSON.stringify(submissions)]
     );
+    
     return {
       id: result.insertId,
       score,
@@ -59,6 +73,15 @@ export default class TestResult {
       [etudiantId]
     );
     return rows;
+  }
+
+  // Get the highest score a student achieved on a test
+  static async getHighestScore(etudiantId, testID) {
+    const [rows] = await db.query(
+      "SELECT MAX(score) as highest_score FROM test_results WHERE etudiant_id = ? AND test_id = ?",
+      [etudiantId, testID]
+    );
+    return rows[0]?.highest_score || 0;
   }
 
   // Optionally: check if student completed a test

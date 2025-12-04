@@ -112,7 +112,7 @@ CREATE TABLE IF NOT EXISTS test_results (
     submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (etudiant_id) REFERENCES etudiants(id) ON DELETE CASCADE ON UPDATE CASCADE,
     FOREIGN KEY (test_id) REFERENCES test(id) ON DELETE CASCADE ON UPDATE CASCADE,
-    UNIQUE KEY unique_test_submission (etudiant_id, test_id),
+    UNIQUE KEY unique_student_test (etudiant_id, test_id),
     INDEX idx_etudiant_id (etudiant_id),
     INDEX idx_test_id (test_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -512,3 +512,9 @@ ALTER TABLE etudiants ADD COLUMN isActivated BOOLEAN NOT NULL DEFAULT TRUE AFTER
 -- Migration to ensure isActivated column has correct default values
 ALTER TABLE enseignants MODIFY COLUMN isActivated BOOLEAN NOT NULL DEFAULT TRUE;
 ALTER TABLE etudiants MODIFY COLUMN isActivated BOOLEAN NOT NULL DEFAULT TRUE;
+
+-- Migration to modify test_results table to allow students to retake tests
+-- This allows students to submit the same test multiple times until they pass (score > 12)
+-- Old records will be replaced with new ones instead of creating multiple records
+ALTER TABLE test_results DROP INDEX unique_test_submission;
+ALTER TABLE test_results ADD UNIQUE KEY unique_student_test (etudiant_id, test_id);

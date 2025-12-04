@@ -174,6 +174,32 @@ Authorization: Bearer <token>
 }
 ```
 
+### POST /admin/admins
+- **Description:** Create a new admin account
+- **Auth:** Required (admin)
+- **Body:**
+```json
+{
+  "username": "string",
+  "email": "string",
+  "password": "string"
+}
+```
+- **Success:** 201 Created
+- **Response:**
+```json
+{
+  "message": "Admin account created successfully",
+  "admin": {
+    "id": "number",
+    "username": "string",
+    "email": "string",
+    "created_at": "string",
+    "updated_at": "string"
+  }
+}
+```
+
 ### DELETE /admin/teachers/:id
 - **Description:** Delete a teacher account and all related data (courses, tests, forum posts, etc.)
 - **Auth:** Required (admin)
@@ -368,4 +394,3 @@ Authorization: Bearer <token>
   "message": "Backup file deleted successfully",
   "filename": "backup-2025-12-04T14-30-00.000Z.sql.gz"
 }
-```

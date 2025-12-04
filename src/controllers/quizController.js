@@ -174,8 +174,8 @@ export const submitTest = async (req, res) => {
     logger.info('Test submission successful', { testID, studentId: etudiantId, score: result.score });
     res.json({ message: "Submission successful", result });
   } catch (error) {
-    if (error.message.includes("already submitted")) {
-      logger.warn('Test already submitted', { error: error.message });
+    if (error.message.includes("already passed")) {
+      logger.warn('Test already passed by student', { error: error.message });
       return res.status(409).json({ error: error.message });
     }
     logger.error('Error submitting test', { error: error.message, stack: error.stack });
