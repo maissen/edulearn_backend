@@ -55,6 +55,44 @@ Authorization: Bearer <token>
 }
 ```
 
+### GET /admin/teacher-courses
+- **Description:** Get all courses of teachers with all details including test numbers, enrolled students, and average test scores
+- **Auth:** Required (admin only)
+- **Success:** 200 OK
+- **Response:**
+```json
+{
+  "teachers": [
+    {
+      "id": "number",
+      "username": "string",
+      "email": "string",
+      "module": "string",
+      "courses": [
+        {
+          "id": "number",
+          "title": "string",
+          "description": "string",
+          "category": "string",
+          "youtube_url": "string",
+          "image_url": "string",
+          "created_at": "string",
+          "updated_at": "string",
+          "test": {
+            "id": "number",
+            "title": "string",
+            "description": "string",
+            "question_count": "number"
+          },
+          "enrolled_student_count": "number",
+          "average_test_score": "number"
+        }
+      ]
+    }
+  ]
+}
+```
+
 ### POST /admin/teachers
 - **Description:** Create a new teacher account
 - **Auth:** Required (admin)
@@ -131,6 +169,17 @@ Authorization: Bearer <token>
 ```json
 {
   "message": "Student account and all related data deleted successfully"
+}
+```
+
+### DELETE /admin/courses/:id
+- **Description:** Delete a course and all related data (tests, test questions, student enrollments, test results, etc.)
+- **Auth:** Required (admin)
+- **Success:** 200 OK
+- **Response:**
+```json
+{
+  "message": "Course and all related data deleted successfully"
 }
 ```
 
