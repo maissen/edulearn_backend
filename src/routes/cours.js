@@ -15,6 +15,7 @@ import {
 } from "../controllers/coursController.js";
 
 import { verifyToken } from "../middlewares/authMiddleware.js";
+import { isAccountActivated } from "../middlewares/activationMiddleware.js";
 import { optionalAuth } from "../middlewares/optionalAuthMiddleware.js";
 import { isTeacherOrAdmin } from "../middlewares/roleMiddleware.js";
 
@@ -29,10 +30,10 @@ router.get("/:id", getCoursById);
 router.get("/:id/content", optionalAuth, getCourseContent);
 router.get("/:id/related", getRelatedCourses);
 
-router.post("/", verifyToken, isTeacherOrAdmin, createCours);
-router.post("/with-test", verifyToken, isTeacherOrAdmin, createCoursWithTest);
-router.put("/:id", verifyToken, isTeacherOrAdmin, updateCours);
-router.put("/:id/with-test", verifyToken, isTeacherOrAdmin, updateCoursWithTest);
-router.delete("/:id", verifyToken, isTeacherOrAdmin, deleteCours);
+router.post("/", verifyToken, isAccountActivated, isTeacherOrAdmin, createCours);
+router.post("/with-test", verifyToken, isAccountActivated, isTeacherOrAdmin, createCoursWithTest);
+router.put("/:id", verifyToken, isAccountActivated, isTeacherOrAdmin, updateCours);
+router.put("/:id/with-test", verifyToken, isAccountActivated, isTeacherOrAdmin, updateCoursWithTest);
+router.delete("/:id", verifyToken, isAccountActivated, isTeacherOrAdmin, deleteCours);
 
 export default router;

@@ -1,7 +1,7 @@
 import { db } from "../../config/db.js";
 
 export const getAllExamens = async (req, res) => {
-  const [rows] = await db.query("SELECT id, titre, classe_id, date FROM examens");
+  const [rows] = await db.query("SELECT id, titre, cours_id as classe_id, created_at as date FROM test");
   res.json(rows);
 };
 
@@ -9,7 +9,7 @@ export const addExamen = async (req, res) => {
   const { titre, classe_id, date } = req.body;
 
   await db.query(
-    "INSERT INTO examens(titre, classe_id, date) VALUES (?, ?, ?)",
+    "INSERT INTO test(titre, cours_id, created_at) VALUES (?, ?, ?)",
     [titre, classe_id, date]
   );
 
@@ -20,7 +20,7 @@ export const updateExamen = async (req, res) => {
   const { titre, classe_id, date } = req.body;
 
   await db.query(
-    "UPDATE examens SET titre = ?, classe_id = ?, date = ? WHERE id = ?",
+    "UPDATE test SET titre = ?, cours_id = ?, created_at = ? WHERE id = ?",
     [titre, classe_id, date, req.params.id]
   );
 
@@ -28,6 +28,6 @@ export const updateExamen = async (req, res) => {
 };
 
 export const deleteExamen = async (req, res) => {
-  await db.query("DELETE FROM examens WHERE id = ?", [req.params.id]);
+  await db.query("DELETE FROM test WHERE id = ?", [req.params.id]);
   res.json({ message: "Examen supprimé" });
 };

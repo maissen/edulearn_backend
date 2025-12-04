@@ -17,6 +17,7 @@ import adminRoutes from "./routes/admin.js";
 // Import the submitTest controller function directly
 import { submitTest } from "./controllers/quizController.js";
 import { verifyToken } from "./middlewares/authMiddleware.js";
+import { isAccountActivated } from "./middlewares/activationMiddleware.js";
 import { isEtudiant } from "./middlewares/roleMiddleware.js";
 
 const app = express();
@@ -46,6 +47,6 @@ app.use("/question", questionRoutes);
 app.use("/admin", adminRoutes);
 
 // Add the test submit route directly to make it accessible at /test/submit
-app.post("/test/submit", verifyToken, isEtudiant, submitTest);
+app.post("/test/submit", verifyToken, isAccountActivated, isEtudiant, submitTest);
 
 export default app;

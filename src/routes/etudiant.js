@@ -14,6 +14,7 @@ import {
 } from "../controllers/etudiantController.js";
 
 import { verifyToken } from "../middlewares/authMiddleware.js";
+import { isAccountActivated } from "../middlewares/activationMiddleware.js";
 import { isAdmin, isEtudiant } from "../middlewares/roleMiddleware.js";
 
 const router = express.Router();
@@ -24,12 +25,12 @@ router.put("/:id", verifyToken, isAdmin, updateEtudiant);
 router.delete("/:id", verifyToken, isAdmin, deleteEtudiant);
 
 // Course enrollment routes for students
-router.get("/courses/in-progress", verifyToken, isEtudiant, getCoursesInProgress);
-router.get("/courses/completed", verifyToken, isEtudiant, getCompletedCourses);
-router.get("/test-results", verifyToken, isEtudiant, getStudentTestResults);
-router.get("/is-enrolled/:courseId", verifyToken, isEtudiant, checkEnrollmentStatus);
-router.get("/has-completed/:courseId", verifyToken, isEtudiant, checkCompletionStatus);
-router.post("/start-course", verifyToken, isEtudiant, startCourse);
-router.post("/complete-course", verifyToken, isEtudiant, completeCourse);
+router.get("/courses/in-progress", verifyToken, isAccountActivated, isEtudiant, getCoursesInProgress);
+router.get("/courses/completed", verifyToken, isAccountActivated, isEtudiant, getCompletedCourses);
+router.get("/test-results", verifyToken, isAccountActivated, isEtudiant, getStudentTestResults);
+router.get("/is-enrolled/:courseId", verifyToken, isAccountActivated, isEtudiant, checkEnrollmentStatus);
+router.get("/has-completed/:courseId", verifyToken, isAccountActivated, isEtudiant, checkCompletionStatus);
+router.post("/start-course", verifyToken, isAccountActivated, isEtudiant, startCourse);
+router.post("/complete-course", verifyToken, isAccountActivated, isEtudiant, completeCourse);
 
 export default router;

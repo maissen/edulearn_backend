@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS enseignants (
     password VARCHAR(255) NOT NULL,
     module VARCHAR(255) NOT NULL,
     biography TEXT,
+    isActivated BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_email (email)
@@ -35,6 +36,7 @@ CREATE TABLE IF NOT EXISTS etudiants (
     password VARCHAR(255) NOT NULL,
     classe_id INT NOT NULL,
     biography TEXT,
+    isActivated BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (classe_id) REFERENCES classes(id) ON DELETE CASCADE ON UPDATE CASCADE,
@@ -460,14 +462,14 @@ INSERT IGNORE INTO admins (username, email, password) VALUES
 ('admin_user', 'admin@school.com', '$2b$10$rVHMO/JrxDMM6QlDyzo7kOjBv.LvgF.hy.B11HGM5Ea6PXCsP2kW2');
 
 -- ====================[ SAMPLE TEACHERS ]========================
-INSERT IGNORE INTO enseignants (username, email, password, module) VALUES
-('teacher_user', 'teacher@school.com', '$2b$10$rVHMO/JrxDMM6QlDyzo7kOjBv.LvgF.hy.B11HGM5Ea6PXCsP2kW2', 'General');
+INSERT IGNORE INTO enseignants (username, email, password, module, isActivated) VALUES
+('teacher_user', 'teacher@school.com', '$2b$10$rVHMO/JrxDMM6QlDyzo7kOjBv.LvgF.hy.B11HGM5Ea6PXCsP2kW2', 'General', true);
 
 -- ====================[ SAMPLE STUDENTS ]========================
-INSERT IGNORE INTO etudiants (username, email, password, classe_id) VALUES
-('student_one', 'student1@school.com', '$2b$10$rVHMO/JrxDMM6QlDyzo7kOjBv.LvgF.hy.B11HGM5Ea6PXCsP2kW2', 1),
-('student_two', 'student2@school.com', '$2b$10$rVHMO/JrxDMM6QlDyzo7kOjBv.LvgF.hy.B11HGM5Ea6PXCsP2kW2', 2),
-('student_three', 'student3@school.com', '$2b$10$rVHMO/JrxDMM6QlDyzo7kOjBv.LvgF.hy.B11HGM5Ea6PXCsP2kW2', 3);
+INSERT IGNORE INTO etudiants (username, email, password, classe_id, isActivated) VALUES
+('student_one', 'student1@school.com', '$2b$10$rVHMO/JrxDMM6QlDyzo7kOjBv.LvgF.hy.B11HGM5Ea6PXCsP2kW2', 1, true),
+('student_two', 'student2@school.com', '$2b$10$rVHMO/JrxDMM6QlDyzo7kOjBv.LvgF.hy.B11HGM5Ea6PXCsP2kW2', 2, true),
+('student_three', 'student3@school.com', '$2b$10$rVHMO/JrxDMM6QlDyzo7kOjBv.LvgF.hy.B11HGM5Ea6PXCsP2kW2', 3, true);
 
 -- ====================[ SAMPLE STUDENT ENROLLMENTS ]========================
 INSERT IGNORE INTO student_enrollments (etudiant_id, cours_id, status, progress_percentage) VALUES
@@ -497,3 +499,16 @@ INSERT IGNORE INTO test_results (etudiant_id, test_id, score, total_questions, c
 (3, 15, 16.00, 5, 4, '[{\"quizId\": 71, \"answer\": \"d\"}, {\"quizId\": 72, \"answer\": \"c\"}, {\"quizId\": 73, \"answer\": \"a\"}, {\"quizId\": 74, \"answer\": \"a\"}, {\"quizId\": 75, \"answer\": \"c\"}]');
 
 -- ====================[ END FULL FILE ]========================
+
+-- ====================[ MIGRATIONS ]========================
+
+-- Migration to add image_url column to cours table
+ALTER TABLE cours ADD COLUMN image_url VARCHAR(500) AFTER youtube_vd_url;
+
+-- Migration to add isActivated column to enseignants and etudiants tables
+ALTER TABLE enseignants ADD COLUMN isActivated BOOLEAN NOT NULL DEFAULT TRUE AFTER biography;
+ALTER TABLE etudiants ADD COLUMN isActivated BOOLEAN NOT NULL DEFAULT TRUE AFTER biography;
+
+-- Migration to ensure isActivated column has correct default values
+ALTER TABLE enseignants MODIFY COLUMN isActivated BOOLEAN NOT NULL DEFAULT TRUE;
+ALTER TABLE etudiants MODIFY COLUMN isActivated BOOLEAN NOT NULL DEFAULT TRUE;

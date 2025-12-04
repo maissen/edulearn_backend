@@ -111,12 +111,7 @@ const performLogin = async (req, res, tableName, role) => {
     user = rows[0];
 
     // Check if user is deactivated (admins don't have isActivated field)
-    if (user.isActivated !== undefined && user.isActivated === false) {
-      return res.status(403).json({ message: "Account is deactivated. Please contact administrator." });
-    }
-
-    // For teachers and students, verify they are activated
-    if ((tableName === "etudiants" || tableName === "enseignants") && user.isActivated !== true) {
+    if (user.hasOwnProperty('isActivated') && user.isActivated === false) {
       return res.status(403).json({ message: "Account is deactivated. Please contact administrator." });
     }
 
