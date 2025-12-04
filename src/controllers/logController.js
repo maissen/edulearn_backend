@@ -61,6 +61,55 @@ export const getLogs = async (req, res) => {
   }
 };
 
+// Clear all logs
+export const clearLogs = async (req, res) => {
+  try {
+    logger.info('Admin clearing all logs', { adminId: req.user?.id });
+    
+    const logsDir = path.join(process.cwd(), 'logs');
+    
+    // Check if logs directory exists
+    try {
+      await fs.access(logsDir);
+    } catch (err) {
+      if (err.code === 'ENOENT') {
+        // If directory doesn't exist, create it
+        await fs.mkdir(logsDir, { recursive: true });
+        logger.info('Logs directory created', { adminId: req.user?.id });
+      } else {
+        throw err;
+      }
+    }
+    
+    // Clear error log file
+    const errorLogPath = path.join(logsDir, 'error.log');
+    await fs.writeFile(errorLogPath, '');
+    
+    // Clear combined log file
+    const combinedLogPath = path.join(logsDir, 'combined.log');
+    await fs.writeFile(combinedLogPath, '');
+    
+    logger.info('All logs cleared successfully', { adminId: req.user?.id });
+    
+    res.json({
+      success: true,
+      message: 'All logs cleared successfully'
+    });
+  } catch (err) {
+    logger.error('Error clearing logs', { 
+      error: err.message, 
+      stack: err.stack,
+      adminId: req.user?.id 
+    });
+    
+    res.status(500).json({ 
+      success: false, 
+      error: 'Failed to clear logs',
+      message: err.message 
+    });
+  }
+};
+
 // Get log file stats
 export const getLogStats = async (req, res) => {
   try {

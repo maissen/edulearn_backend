@@ -58,8 +58,14 @@ export const getStatistics = async (req, res) => {
     // Get count of classes
     const [classesCount] = await db.query("SELECT COUNT(*) as count FROM classes");
     
-    // Get count of forum posts
-    const [forumPostsCount] = await db.query("SELECT COUNT(*) as count FROM forum_posts");
+    // Get count of forum posts (handle case where table might not exist)
+    let forumPostsCount = [{ count: 0 }];
+    try {
+      [forumPostsCount] = await db.query("SELECT COUNT(*) as count FROM forum_posts");
+    } catch (err) {
+      // If forum_posts table doesn't exist, return 0
+      logger.warn('forum_posts table not found, returning 0 count', { error: err.message });
+    }
     
     res.json({
       users: {
@@ -155,8 +161,15 @@ export const getAllTeacherCourses = async (req, res) => {
             WHERE test_id = ?
           `, [course.test_id]);
           
-          course.average_test_score = avgScore[0].average_score ? 
-            parseFloat(avgScore[0].average_score.toFixed(2)) : 0;
+          // Fix the average score calculation
+          if (avgScore[0].average_score !== null) {
+            course.average_test_score = parseFloat(avgScore[0].average_score);
+            if (!isNaN(course.average_test_score)) {
+              course.average_test_score = parseFloat(course.average_test_score.toFixed(2));
+            }
+          } else {
+            course.average_test_score = 0;
+          }
         }
         
         // Clean up temporary fields

@@ -269,6 +269,18 @@ Authorization: Bearer <token>
 }
 ```
 
+### DELETE /admin/logs
+- **Description:** Clear all application logs (empties log files)
+- **Auth:** Required (admin only)
+- **Success:** 200 OK
+- **Response:**
+```json
+{
+  "success": true,
+  "message": "All logs cleared successfully"
+}
+```
+
 ### GET /admin/logs/export
 - **Description:** Export application logs as a CSV file
 - **Auth:** Required (admin only)
@@ -327,6 +339,7 @@ Authorization: Bearer <token>
     {
       "filename": "backup-2025-12-04T14-30-00.000Z.sql.gz",
       "size": 102400,
+      "sizeFormatted": "100 KB",
       "createdAt": "2025-12-04T14:30:00.000Z",
       "modifiedAt": "2025-12-04T14:30:00.000Z"
     }

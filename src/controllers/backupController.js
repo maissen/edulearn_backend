@@ -21,6 +21,19 @@ async function ensureBackupsDirectory() {
   return backupsDir;
 }
 
+// Helper function to convert bytes to human readable format
+function formatBytes(bytes, decimals = 2) {
+  if (bytes === 0) return '0 Bytes';
+  
+  const k = 1024;
+  const dm = decimals < 0 ? 0 : decimals;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+  
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+}
+
 // Create database backup
 export const createBackup = async (req, res) => {
   try {
@@ -109,6 +122,7 @@ export const listBackups = async (req, res) => {
         backups.push({
           filename: file,
           size: stats.size,
+          sizeFormatted: formatBytes(stats.size), // Add human readable size
           createdAt: stats.birthtime,
           modifiedAt: stats.mtime
         });

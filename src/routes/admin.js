@@ -11,7 +11,7 @@ import {
   getAllTeacherCourses,
   deleteCourse
 } from "../controllers/adminController.js";
-import { getLogs, getLogStats, exportLogsCSV } from "../controllers/logController.js";
+import { getLogs, getLogStats, exportLogsCSV, clearLogs } from "../controllers/logController.js";
 import { createBackup, listBackups, downloadBackup, deleteBackup } from "../controllers/backupController.js";
 import { isAdmin } from "../middlewares/roleMiddleware.js";
 import { verifyToken } from "../middlewares/authMiddleware.js";
@@ -50,6 +50,9 @@ router.delete("/courses/:id", verifyToken, isAdmin, deleteCourse);
 
 // Get logs (admin only)
 router.get("/logs", verifyToken, isAdmin, getLogs);
+
+// Clear all logs (admin only)
+router.delete("/logs", verifyToken, isAdmin, clearLogs);
 
 // Get log stats (admin only)
 router.get("/log-stats", verifyToken, isAdmin, getLogStats);
