@@ -33,7 +33,7 @@ services:
         condition: service_healthy
     environment:
       PORT: ${PORT}
-      DB_HOST: db
+      DB_HOST: ${DB_HOST}
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: ${DB_NAME}
@@ -61,7 +61,7 @@ services:
     depends_on:
       - db
     environment:
-      PMA_HOST: db
+      PMA_HOST: school_platform_db
       PMA_PORT: 3306
       PMA_USER: ${DB_USER}
       PMA_PASSWORD: ${DB_PASSWORD}
