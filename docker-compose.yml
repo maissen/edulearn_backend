@@ -48,6 +48,7 @@ services:
       - /app/node_modules
       - ./src/uploads:/app/src/uploads
       - ./logs:/app/logs
+      - ./backups:/app/backups
     networks:
       - school_network
     command: npm start

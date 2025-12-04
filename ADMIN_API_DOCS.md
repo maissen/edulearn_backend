@@ -218,3 +218,94 @@ Authorization: Bearer <token>
   "isActivated": "boolean"
 }
 ```
+
+## Admin Log Management Routes
+
+### GET /admin/logs
+- **Description:** Get recent log entries from the application logs
+- **Auth:** Required (admin only)
+- **Query Parameters:**
+  - `count` (optional): Number of log entries to return (default: 50, max: 1000)
+  - `type` (optional): Type of logs to retrieve ('combined' or 'error', default: 'combined')
+- **Success:** 200 OK
+- **Response:**
+```json
+{
+  "success": true,
+  "count": 50,
+  "logs": [
+    {
+      "timestamp": "2025-12-04T14:30:00.000Z",
+      "level": "info",
+      "message": "User logged in",
+      "service": "school-platform-backend",
+      "userId": 123
+    }
+  ]
+}
+```
+
+### GET /admin/log-stats
+- **Description:** Get statistics about log files including sizes and modification dates
+- **Auth:** Required (admin only)
+- **Success:** 200 OK
+- **Response:**
+```json
+{
+  "success": true,
+  "stats": {
+    "combined": {
+      "size": 102400,
+      "modified": "2025-12-04T14:30:00.000Z"
+    },
+    "error": {
+      "size": 20480,
+      "modified": "2025-12-04T14:25:00.000Z"
+    }
+  }
+}
+```
+
+## Admin Backup Management Routes
+
+### POST /admin/backup
+- **Description:** Create a gzipped SQL backup of the entire database
+- **Auth:** Required (admin only)
+- **Success:** 200 OK
+- **Response:**
+```json
+{
+  "success": true,
+  "message": "Backup created successfully",
+  "filename": "backup-2025-12-04T14-30-00.000Z.sql.gz",
+  "size": 102400,
+  "createdAt": "2025-12-04T14:30:00.000Z"
+}
+```
+
+### GET /admin/backups
+- **Description:** List all available database backups
+- **Auth:** Required (admin only)
+- **Success:** 200 OK
+- **Response:**
+```json
+{
+  "success": true,
+  "backups": [
+    {
+      "filename": "backup-2025-12-04T14-30-00.000Z.sql.gz",
+      "size": 102400,
+      "createdAt": "2025-12-04T14:30:00.000Z",
+      "modifiedAt": "2025-12-04T14:30:00.000Z"
+    }
+  ]
+}
+```
+
+### GET /admin/backups/:filename
+- **Description:** Download a specific database backup file
+- **Auth:** Required (admin only)
+- **Parameters:**
+  - `filename`: Name of the backup file to download
+- **Success:** 200 OK (file download)
+- **Response:** Binary gzip file content

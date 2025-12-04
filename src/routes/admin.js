@@ -10,6 +10,8 @@ import {
   getAllTeacherCourses,
   deleteCourse
 } from "../controllers/adminController.js";
+import { getLogs, getLogStats } from "../controllers/logController.js";
+import { createBackup, listBackups, downloadBackup } from "../controllers/backupController.js";
 import { isAdmin } from "../middlewares/roleMiddleware.js";
 import { verifyToken } from "../middlewares/authMiddleware.js";
 
@@ -41,5 +43,20 @@ router.delete("/students/:id", verifyToken, isAdmin, deleteStudent);
 
 // Delete a course and all related data (admin only)
 router.delete("/courses/:id", verifyToken, isAdmin, deleteCourse);
+
+// Get logs (admin only)
+router.get("/logs", verifyToken, isAdmin, getLogs);
+
+// Get log stats (admin only)
+router.get("/log-stats", verifyToken, isAdmin, getLogStats);
+
+// Create database backup (admin only)
+router.post("/backup", verifyToken, isAdmin, createBackup);
+
+// List available backups (admin only)
+router.get("/backups", verifyToken, isAdmin, listBackups);
+
+// Download a backup file (admin only)
+router.get("/backups/:filename", verifyToken, isAdmin, downloadBackup);
 
 export default router;
