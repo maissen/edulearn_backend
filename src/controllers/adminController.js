@@ -1,5 +1,6 @@
 import { db } from "../../config/db.js";
 import logger from "../utils/logger.js";
+import bcrypt from "bcryptjs";
 
 // Get all users (admins, teachers, students) with all details (admin only)
 export const getAllUsers = async (req, res) => {
@@ -259,10 +260,13 @@ export const createTeacher = async (req, res) => {
       return res.status(400).json({ message: "Teacher with this email already exists" });
     }
     
+    // Hash the password before storing
+    const hashedPassword = await bcrypt.hash(password, 10);
+    
     // Insert new teacher
     const [result] = await db.query(
       "INSERT INTO enseignants (username, email, password, module, isActivated) VALUES (?, ?, ?, ?, ?)",
-      [username, email, password, module, true] // Activate by default
+      [username, email, hashedPassword, module, true] // Activate by default
     );
     
     const [newTeacher] = await db.query(
@@ -297,10 +301,13 @@ export const createStudent = async (req, res) => {
       return res.status(400).json({ message: "Student with this email already exists" });
     }
     
+    // Hash the password before storing
+    const hashedPassword = await bcrypt.hash(password, 10);
+    
     // Insert new student (assign to class ID 1 by default)
     const [result] = await db.query(
       "INSERT INTO etudiants (username, email, password, classe_id, isActivated) VALUES (?, ?, ?, ?, ?)",
-      [username, email, password, 1, true] // Assign to class 1 and activate by default
+      [username, email, hashedPassword, 1, true] // Assign to class 1 and activate by default
     );
     
     const [newStudent] = await db.query(
