@@ -141,3 +141,95 @@ export const createStudent = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+// Delete a teacher account and all related data
+export const deleteTeacher = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Check if teacher exists
+    const [teacher] = await db.query("SELECT * FROM enseignants WHERE id = ?", [id]);
+    if (teacher.length === 0) {
+      return res.status(404).json({ message: "Teacher not found" });
+    }
+
+    // Start transaction
+    await db.query("START TRANSACTION");
+
+    try {
+      // Delete all courses created by this teacher (this will cascade delete tests, test questions, etc.)
+      await db.query("DELETE FROM cours WHERE enseignant_id = ?", [id]);
+      
+      // Delete forum posts by this teacher
+      await db.query("DELETE FROM forum WHERE user_id = ? AND user_role = 'enseignant'", [id]);
+      
+      // Delete comments by this teacher
+      await db.query("DELETE FROM comments WHERE user_id = ? AND user_role = 'enseignant'", [id]);
+      
+      // Finally, delete the teacher account
+      await db.query("DELETE FROM enseignants WHERE id = ?", [id]);
+
+      // Commit transaction
+      await db.query("COMMIT");
+
+      res.json({ 
+        message: "Teacher account and all related data deleted successfully"
+      });
+    } catch (err) {
+      // Rollback transaction in case of error
+      await db.query("ROLLBACK");
+      throw err;
+    }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// Delete a student account and all related data
+export const deleteStudent = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Check if student exists
+    const [student] = await db.query("SELECT * FROM etudiants WHERE id = ?", [id]);
+    if (student.length === 0) {
+      return res.status(404).json({ message: "Student not found" });
+    }
+
+    // Start transaction
+    await db.query("START TRANSACTION");
+
+    try {
+      // Delete test results for this student
+      await db.query("DELETE FROM test_results WHERE etudiant_id = ?", [id]);
+      
+      // Delete student enrollments
+      await db.query("DELETE FROM student_enrollments WHERE etudiant_id = ?", [id]);
+      
+      // Delete finished courses records
+      await db.query("DELETE FROM finished_courses WHERE etudiant_id = ?", [id]);
+      
+      // Delete forum posts by this student
+      await db.query("DELETE FROM forum WHERE user_id = ? AND user_role = 'etudiant'", [id]);
+      
+      // Delete comments by this student
+      await db.query("DELETE FROM comments WHERE user_id = ? AND user_role = 'etudiant'", [id]);
+      
+      // Finally, delete the student account
+      await db.query("DELETE FROM etudiants WHERE id = ?", [id]);
+
+      // Commit transaction
+      await db.query("COMMIT");
+
+      res.json({ 
+        message: "Student account and all related data deleted successfully"
+      });
+    } catch (err) {
+      // Rollback transaction in case of error
+      await db.query("ROLLBACK");
+      throw err;
+    }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};

@@ -112,6 +112,28 @@ Authorization: Bearer <token>
 }
 ```
 
+### DELETE /admin/teachers/:id
+- **Description:** Delete a teacher account and all related data (courses, tests, forum posts, etc.)
+- **Auth:** Required (admin)
+- **Success:** 200 OK
+- **Response:**
+```json
+{
+  "message": "Teacher account and all related data deleted successfully"
+}
+```
+
+### DELETE /admin/students/:id
+- **Description:** Delete a student account and all related data (test results, enrollments, forum posts, etc.)
+- **Auth:** Required (admin)
+- **Success:** 200 OK
+- **Response:**
+```json
+{
+  "message": "Student account and all related data deleted successfully"
+}
+```
+
 ### PATCH /admin/teachers/:id/activation
 - **Description:** Toggle activation status for a teacher
 - **Auth:** Required (admin)

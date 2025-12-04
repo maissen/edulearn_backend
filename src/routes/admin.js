@@ -4,7 +4,9 @@ import {
   toggleTeacherActivation,
   toggleStudentActivation,
   createTeacher,
-  createStudent
+  createStudent,
+  deleteTeacher,
+  deleteStudent
 } from "../controllers/adminController.js";
 import { isAdmin } from "../middlewares/roleMiddleware.js";
 import { verifyToken } from "../middlewares/authMiddleware.js";
@@ -25,5 +27,11 @@ router.post("/teachers", verifyToken, isAdmin, createTeacher);
 
 // Create a new student account (admin only)
 router.post("/students", verifyToken, isAdmin, createStudent);
+
+// Delete a teacher account and all related data (admin only)
+router.delete("/teachers/:id", verifyToken, isAdmin, deleteTeacher);
+
+// Delete a student account and all related data (admin only)
+router.delete("/students/:id", verifyToken, isAdmin, deleteStudent);
 
 export default router;
