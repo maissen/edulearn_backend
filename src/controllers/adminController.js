@@ -59,13 +59,13 @@ export const getStatistics = async (req, res) => {
     // Get count of classes
     const [classesCount] = await db.query("SELECT COUNT(*) as count FROM classes");
     
-    // Get count of forum posts (handle case where table might not exist)
+    // Get count of forum entries (handle case where table might not exist)
     let forumPostsCount = [{ count: 0 }];
     try {
-      [forumPostsCount] = await db.query("SELECT COUNT(*) as count FROM forum_posts");
+      [forumPostsCount] = await db.query("SELECT COUNT(*) as count FROM forum");
     } catch (err) {
-      // If forum_posts table doesn't exist, return 0
-      logger.warn('Table forum_posts non trouvée, renvoi du nombre 0', { error: err.message });
+      // If forum table doesn't exist, return 0
+      logger.warn('Table forum non trouvée, renvoi du nombre 0', { error: err.message });
     }
     
     res.json({
@@ -383,8 +383,8 @@ export const deleteTeacher = async (req, res) => {
       return res.status(404).json({ message: "Enseignant non trouvé" });
     }
     
-    // Delete teacher's forum posts
-    await connection.query("DELETE FROM forum_posts WHERE author_id = ? AND author_type = 'enseignant'", [id]);
+    // Delete teacher's forum entries
+    await connection.query("DELETE FROM forum WHERE user_id = ? AND user_role = 'enseignant'", [id]);
     
     // Get teacher's courses
     const [courses] = await connection.query("SELECT id FROM cours WHERE enseignant_id = ?", [id]);
@@ -448,8 +448,8 @@ export const deleteStudent = async (req, res) => {
       return res.status(404).json({ message: "Étudiant non trouvé" });
     }
     
-    // Delete student's forum posts
-    await connection.query("DELETE FROM forum_posts WHERE author_id = ? AND author_type = 'etudiant'", [id]);
+    // Delete student's forum entries
+    await connection.query("DELETE FROM forum WHERE user_id = ? AND user_role = 'etudiant'", [id]);
     
     // Delete test results
     await connection.query("DELETE FROM test_results WHERE etudiant_id = ?", [id]);

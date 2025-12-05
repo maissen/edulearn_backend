@@ -579,7 +579,7 @@ Authorization: Bearer <token>
 ## 5. Forum Routes
 
 ### GET /forum
-- **Description:** Get all forum posts
+- **Description:** Get all forum entries
 - **Auth:** None
 - **Success:** 200 OK
 - **Response:**
@@ -1365,7 +1365,7 @@ Authorization: Bearer <token>
 ## Role-Based Access Control
 
 - **Public:** Can access GET endpoints (except profile)
-- **Any authenticated user:** Can access profile, create forum posts/comments
+- **Any authenticated user:** Can access profile, create forum entries/comments
 - **Admin:** Full access to all endpoints, can manage enseignants, etudiants, and classes
 - **Enseignant (Teacher):** Can create/update/delete cours, examen, quiz, and questions
 - **Etudiant (Student):** Can view content and participate in forums

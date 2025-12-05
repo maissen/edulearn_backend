@@ -201,7 +201,7 @@ Authorization: Bearer <token>
 ```
 
 ### DELETE /admin/teachers/:id
-- **Description:** Delete a teacher account and all related data (courses, tests, forum posts, etc.)
+- **Description:** Delete a teacher account and all related data (courses, tests, forum entries, etc.)
 - **Auth:** Required (admin)
 - **Success:** 200 OK
 - **Response:**
@@ -212,7 +212,7 @@ Authorization: Bearer <token>
 ```
 
 ### DELETE /admin/students/:id
-- **Description:** Delete a student account and all related data (test results, enrollments, forum posts, etc.)
+- **Description:** Delete a student account and all related data (test results, enrollments, forum entries, etc.)
 - **Auth:** Required (admin)
 - **Success:** 200 OK
 - **Response:**
